@@ -58,6 +58,7 @@ SRCS  = \
   subarray.cc \
   technology.cc \
   uca.cc \
+  vector_engine.cc \
   wire.cc \
   xmlParser.cc \
   powergating.cc

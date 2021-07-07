@@ -293,6 +293,23 @@ typedef struct{
 } system_core;
 typedef struct{
 	//params
+	int clock_rate;
+	int lanes;
+	double mvl;
+	int pipelines_per_lane;
+	int vrf_ports;
+	int device_type;
+
+	double vdd;
+	double power_gating_vcc;
+	//stats
+	double total_accesses;
+	double read_accesses;
+	double write_accesses;
+	double duty_cycle;
+} system_vector_engine;
+typedef struct{
+	//params
 	int Directory_type;
 	double Dir_config[20];
 	int buffer_sizes[20];
@@ -583,6 +600,7 @@ typedef struct{
     double power_gating_vcc;
 	//system.core(0-n):3rd level
 	system_core core[64];
+	system_vector_engine vector_engine[64];
 	system_L1Directory L1Directory[64];
 	system_L2Directory L2Directory[64];
 	system_L2 L2[64];

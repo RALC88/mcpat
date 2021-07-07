@@ -39,8 +39,8 @@
 #include "arbiter.h"
 #include <vector>
 #include "basic_components.h"
-#include "core.h"
 #include "vector_engine.h"
+#include "core.h"
 #include "memoryctrl.h"
 #include "router.h"
 #include "sharedcache.h"
@@ -52,7 +52,7 @@ class Processor : public Component
   public:
     ParseXML *XML;
     vector<Core *> cores;
-    vector<VectorEngine *> vector_engine;
+    vector<VectorEngine *> vector_engines;
     vector<SharedCache *> l2array;
     vector<SharedCache *> l3array;
     vector<SharedCache *> l1dirarray;
@@ -66,8 +66,8 @@ class Processor : public Component
     ProcParam procdynp;
     //wire  globalInterconnect;
     //clock_network globalClock;
-    Component core, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,flashcontrollers;
-    int  numCore, numL2, numL3, numNOC, numL1Dir, numL2Dir;
+    Component core, vector_engine, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,flashcontrollers;
+    int  numCore,numLanes, numL2, numL3, numNOC, numL1Dir, numL2Dir;
     Processor(ParseXML *XML_interface);
     void compute();
     void set_proc_param();
