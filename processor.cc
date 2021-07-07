@@ -131,6 +131,29 @@ Processor::Processor(ParseXML *XML_interface)
 		  }
   }
 
+  int lane_id = 0;
+  for (i = 0;i < numCore; i++)
+  {
+        for (int j = 0;j < numLanes; j++)
+        {
+          lane_id = (i*numLanes)+j;
+		  vector_engine.push_back(new Lane(XML,lane_id, &interface_ip));
+		  vector_engine[lane_id]->computeEnergy();
+		  vector_engine[lane_id]->computeEnergy(false);
+
+		  vector_engine.area.set_area(vector_engine.area.get_area() + vector_engine[lane_id]->area.get_area());
+		  area.set_area(area.get_area() + vector_engine[lane_id]->area.get_area());//placement and routing overhead is 10%, core scales worse than cache 40% is accumulated from 90 to 22nm
+
+		  set_pppm(pppm_t,vector_engine[lane_id]->clockRate, 1, 1, 1);
+		  vector_engine.power = vector_engine.power + vector_engine[lane_id]->power*pppm_t;
+		  power = power  + vector_engine[lane_id]->power*pppm_t;
+
+		  set_pppm(pppm_t,1/vector_engine[lane_id]->executionTime, 1, 1, 1);
+		  vector_engine.rt_power = vector_engine.rt_power + vector_engine[lane_id]->rt_power*pppm_t;
+		  rt_power = rt_power  + vector_engine[lane_id]->rt_power*pppm_t;
+        }
+  }
+
   if (!XML->sys.Private_L2)
   {
   if (numL2 >0)
