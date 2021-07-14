@@ -175,8 +175,23 @@ public:
 	       FPU_cdb_duty_cycle;
 	double vdd;
 	double power_gating_vcc;
+
+    // Vector Engine
+    enum Core_type vector_ty;
+    int num_VRF_entry;
+    int vector_data_width;
+    int vector_issueW;
+    int vector_peak_issueW;
+    int vector_commitW;
+    int vector_peak_commitW;
+    int vector_num_pipelines; // Per lane
+    int vector_num_fpus; // FPU per lane
+    int vector_num_muls;
+    int vector_arch_reg_width;
+
     ~CoreDynParam(){};
 };
+
 
 class CacheDynParam {
 public:
@@ -240,7 +255,7 @@ public:
 	ProcParam(){};
 	ProcParam(ParseXML *XML_interface, int ithCache_);
     string name;
-    int  numCore, numL2, numL3, numNOC, numL1Dir, numL2Dir,numMC, numMCChannel;
+    int  numCore,numVectorEngine, numL2, numL3, numNOC, numL1Dir, numL2Dir,numMC, numMCChannel;
     bool homoCore, homoL2, homoL3, homoNOC, homoL1Dir, homoL2Dir;
 	double vdd;
 	double power_gating_vcc;
