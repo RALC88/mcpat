@@ -55,6 +55,7 @@ void ParseXML::parse(char* filepath)
 	for(i=0; i<itmp; i++)
 	{
 		if (strcmp(xNode2.getChildNode("param",i).getAttribute("name"),"number_of_cores")==0) {sys.number_of_cores=atoi(xNode2.getChildNode("param",i).getAttribute("value"));continue;}
+		if (strcmp(xNode2.getChildNode("param",i).getAttribute("name"),"number_of_vector_engines")==0) {sys.number_of_vector_engines=atoi(xNode2.getChildNode("param",i).getAttribute("value"));continue;}
 		if (strcmp(xNode2.getChildNode("param",i).getAttribute("name"),"number_of_L1Directories")==0) {sys.number_of_L1Directories=atoi(xNode2.getChildNode("param",i).getAttribute("value"));continue;}
 		if (strcmp(xNode2.getChildNode("param",i).getAttribute("name"),"number_of_L2Directories")==0) {sys.number_of_L2Directories=atoi(xNode2.getChildNode("param",i).getAttribute("value"));continue;}
 		if (strcmp(xNode2.getChildNode("param",i).getAttribute("name"),"number_of_L2s")==0) {sys.number_of_L2s=atoi(xNode2.getChildNode("param",i).getAttribute("value"));continue;}
@@ -1419,6 +1420,7 @@ void ParseXML::initialize() //Initialize all
 {
 	//All number_of_* at the level of 'system' 03/21/2009
 	sys.number_of_cores=1;
+	sys.number_of_vector_engines=0; // Check 
 	sys.number_of_L1Directories=1;
 	sys.number_of_L2Directories=1;
 	sys.number_of_L2s=1;

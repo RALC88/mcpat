@@ -296,17 +296,42 @@ typedef struct{
 	int clock_rate;
 	int lanes;
 	double mvl;
-	int pipelines_per_lane;
+	//int pipelines_per_lane[20];
 	int vrf_ports;
 	int device_type;
+	int phy_Regs_VRF_size;  // nuevo
+    int archi_Regs_VRF_size;
+
+	int vector_issue_width;
+	int vector_peak_issue_width;
+	int vector_commit_width;
+	int vector_machine_type;
+
+	int FPU_per_lane;
+	int MUL_per_lane;
+	int pipelines_per_vector_engine[20];
+
+	int pipeline_duty_cycle;
+	int total_cycles;
+	int busy_cycles;
+	int idle_cycles;
+
+	int ALU_duty_cycle;
+	int MUL_duty_cycle;
+	int FPU_duty_cycle;
 
 	double vdd;
 	double power_gating_vcc;
+
 	//stats
+	double vec_regfile_reads; // nuevo
+	double vec_regfile_writes; // nuevo
+
 	double total_accesses;
 	double read_accesses;
 	double write_accesses;
 	double duty_cycle;
+
 } system_vector_engine;
 typedef struct{
 	//params
@@ -555,6 +580,7 @@ typedef struct{
 typedef struct{
 	//All number_of_* at the level of 'system' Ying 03/21/2009
 	int number_of_cores;
+	int number_of_vector_engines;
 	int number_of_L1Directories;
 	int number_of_L2Directories;
 	int number_of_L2s;
