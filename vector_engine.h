@@ -40,118 +40,27 @@
 #include "interconnect.h"
 #include "basic_components.h"
 #include "sharedcache.h"
-/*
-class SchedulerU :public Component {
+
+class VReg :public Component {
   public:
 
 	ParseXML *XML;
 	int  ithCore;
 	InputParameter interface_ip;
-	CoreDynParam  coredynp;
-	double clockRate,executionTime;
-	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	double Iw_height, fp_Iw_height,ROB_height;
-	ArrayST         * int_inst_window;
-	ArrayST         * fp_inst_window;
-	ArrayST         * ROB;
-    selection_logic * instruction_selection;
-    bool exist;
-
-    SchedulerU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~SchedulerU();
-};
-
-class RENAMINGU :public Component {
-  public:
-
-	ParseXML *XML;
-	int  ithCore;
-	InputParameter interface_ip;
-	double clockRate,executionTime;
-	CoreDynParam  coredynp;
-	ArrayST * iFRAT;
-	ArrayST * fFRAT;
-	ArrayST * iRRAT;
-	ArrayST * fRRAT;
-	ArrayST * ifreeL;
-	ArrayST * ffreeL;
-	dep_resource_conflict_check * idcl;
-	dep_resource_conflict_check * fdcl;
-	ArrayST * RAHT;//register alias history table Used to store GC
-	bool exist;
-
-
-	RENAMINGU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_=true);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~RENAMINGU();
-};
-
-class LoadStoreU :public Component {
-  public:
-
-	ParseXML *XML;
-	int  ithCore;
-	InputParameter interface_ip;
-	CoreDynParam  coredynp;
-	enum Cache_policy cache_p;
-	double clockRate,executionTime;
-	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	double lsq_height;
-	DataCache dcache;
-	ArrayST * LSQ;//it is actually the store queue but for inorder processors it serves as both loadQ and StoreQ
-	ArrayST * LoadQ;
-	bool exist;
-
-	LoadStoreU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~LoadStoreU();
-};
-
-class MemManU :public Component {
-  public:
-
-	ParseXML *XML;
-	int  ithCore;
-	InputParameter interface_ip;
-	CoreDynParam  coredynp;
-	double clockRate,executionTime;
-	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	ArrayST * itlb;
-	ArrayST * dtlb;
-	bool exist;
-
-	MemManU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
-    void computeEnergy(bool is_tdp=true);
-    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~MemManU();
-};
-
-class RegFU :public Component {
-  public:
-
-	ParseXML *XML;
-	int  ithCore;
-	InputParameter interface_ip;
-	CoreDynParam  coredynp;
+	CoreDynParam  vectordynp;
 	double clockRate,executionTime;
 	double scktRatio, chip_PR_overhead, macro_PR_overhead;
 	double int_regfile_height, fp_regfile_height;
-	ArrayST * IRF;
-	ArrayST * FRF;
-	ArrayST * RFWIN;
+	ArrayST * vrf;
 	bool exist;
 
-	RegFU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
+	VReg(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
     void computeEnergy(bool is_tdp=true);
     void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~RegFU();
+	~VReg();
 };
 
-class EXECU :public Component {
+class VEXECU :public Component {
   public:
 
 	ParseXML *XML;
@@ -159,29 +68,38 @@ class EXECU :public Component {
 	InputParameter interface_ip;
 	double clockRate,executionTime;
 	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	double lsq_height;
-	CoreDynParam  coredynp;
-	RegFU          * rfu;
-	SchedulerU     * scheu;
+	CoreDynParam  vectordynp;
+	VReg          * vector_reg_file;
     FunctionalUnit * fp_u;
     FunctionalUnit * exeu;
     FunctionalUnit * mul;
-	interconnect * int_bypass;
-	interconnect * intTagBypass;
-	interconnect * int_mul_bypass;
-	interconnect * intTag_mul_Bypass;
-	interconnect * fp_bypass;
-	interconnect * fpTagBypass;
 
-	Component  bypass;
 	bool exist;
 
-	EXECU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, double lsq_height_,const CoreDynParam & dyn_p_, bool exist_=true);
+	VEXECU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_=true);
     void computeEnergy(bool is_tdp=true);
 	void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~EXECU();
+	~VEXECU();
 };
-*/
+
+class VectorLane :public Component {
+  public:
+
+    ParseXML *XML;
+    int  ithCore;
+    InputParameter interface_ip;
+    double clockRate,executionTime;
+    double scktRatio, chip_PR_overhead, macro_PR_overhead;
+    VEXECU      * exu;
+    CoreDynParam  vectordynp;
+    //full_decoder  inst_decoder;
+    //clock_network clockNetwork;
+    VectorLane(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_);
+//    void set_lane_param();
+    void computeEnergy(bool is_tdp=true);
+    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
+    ~VectorLane();
+};
 
 class VectorEngine :public Component {
   public:
@@ -191,10 +109,12 @@ class VectorEngine :public Component {
 	InputParameter interface_ip;
 	double clockRate,executionTime;
 	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-//	EXECU      * exu;
-    CoreDynParam  coredynp;
+	vector<VectorLane *> lanes;
+    CoreDynParam  vectordynp;
     //full_decoder 	inst_decoder;
     //clock_network	clockNetwork;
+    Component lane;
+    int numLanes;
 	VectorEngine(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_);
 	void set_vector_param();
 	void computeEnergy(bool is_tdp=true);
