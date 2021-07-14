@@ -131,29 +131,27 @@ Processor::Processor(ParseXML *XML_interface)
 		  }
   }
 
-  int lane_id = 0;
-  for (i = 0;i < numCore; i++)
+  if (numVectorEngine >0)
   {
-        //for (int j = 0;j < numLanes; j++)
-        //{
-        //  lane_id = (i*numLanes)+j;
-          lane_id = i;
-		  vector_engines.push_back(new VectorEngine(XML,lane_id, &interface_ip));
-		  vector_engines[lane_id]->computeEnergy();
-		  vector_engines[lane_id]->computeEnergy(false);
+    for (i = 0;i < numVectorEngine; i++)
+    {
+        vector_engines.push_back(new VectorEngine(XML,i, &interface_ip));
+        vector_engines[i]->computeEnergy();
+        vector_engines[i]->computeEnergy(false);
 
-		  vector_engine.area.set_area(vector_engine.area.get_area() + vector_engines[lane_id]->area.get_area());
-		  area.set_area(area.get_area() + vector_engines[lane_id]->area.get_area());//placement and routing overhead is 10%, core scales worse than cache 40% is accumulated from 90 to 22nm
+        vector_engine.area.set_area(vector_engine.area.get_area() + vector_engines[i]->area.get_area());
+        area.set_area(area.get_area() + vector_engines[i]->area.get_area());//placement and routing overhead is 10%, core scales worse than cache 40% is accumulated from 90 to 22nm
 
-		  set_pppm(pppm_t,vector_engines[lane_id]->clockRate, 1, 1, 1);
-		  vector_engine.power = vector_engine.power + vector_engines[lane_id]->power*pppm_t;
-		  power = power  + vector_engines[lane_id]->power*pppm_t;
+        set_pppm(pppm_t,vector_engines[i]->clockRate, 1, 1, 1);
+        vector_engine.power = vector_engine.power + vector_engines[i]->power*pppm_t;
+        power = power  + vector_engines[i]->power*pppm_t;
 
-		  set_pppm(pppm_t,1/vector_engines[lane_id]->executionTime, 1, 1, 1);
-		  vector_engine.rt_power = vector_engine.rt_power + vector_engines[lane_id]->rt_power*pppm_t;
-		  rt_power = rt_power  + vector_engines[lane_id]->rt_power*pppm_t;
-        //}
+        set_pppm(pppm_t,1/vector_engines[i]->executionTime, 1, 1, 1);
+        vector_engine.rt_power = vector_engine.rt_power + vector_engines[i]->rt_power*pppm_t;
+        rt_power = rt_power  + vector_engines[i]->rt_power*pppm_t;
+    }
   }
+
 
   if (!XML->sys.Private_L2)
   {
@@ -530,18 +528,31 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp)
 		cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic << " W" << endl;
 		cout <<endl;
 		if (numCore >0){
-		cout <<indent_str<<"Total Cores: "<<XML->sys.number_of_cores << " cores "<<endl;
-		displayDeviceType(XML->sys.device_type,indent);
-		cout << indent_str_next << "Area = " << core.area.get_area()*1e-6<< " mm^2" << endl;
-		cout << indent_str_next << "Peak Dynamic = " << core.power.readOp.dynamic << " W" << endl;
-		cout << indent_str_next << "Subthreshold Leakage = "
-			<< (long_channel? core.power.readOp.longer_channel_leakage:core.power.readOp.leakage) <<" W" << endl;
-		if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-				<< (long_channel? core.power.readOp.power_gated_with_long_channel_leakage : core.power.readOp.power_gated_leakage)  << " W" << endl;
-		cout << indent_str_next << "Gate Leakage = " << core.power.readOp.gate_leakage << " W" << endl;
-		cout << indent_str_next << "Runtime Dynamic = " << core.rt_power.readOp.dynamic << " W" << endl;
-		cout <<endl;
+    		cout <<indent_str<<"Total Cores: "<<XML->sys.number_of_cores << " cores "<<endl;
+    		displayDeviceType(XML->sys.device_type,indent);
+    		cout << indent_str_next << "Area = " << core.area.get_area()*1e-6<< " mm^2" << endl;
+    		cout << indent_str_next << "Peak Dynamic = " << core.power.readOp.dynamic << " W" << endl;
+    		cout << indent_str_next << "Subthreshold Leakage = "
+    			<< (long_channel? core.power.readOp.longer_channel_leakage:core.power.readOp.leakage) <<" W" << endl;
+    		if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+    				<< (long_channel? core.power.readOp.power_gated_with_long_channel_leakage : core.power.readOp.power_gated_leakage)  << " W" << endl;
+    		cout << indent_str_next << "Gate Leakage = " << core.power.readOp.gate_leakage << " W" << endl;
+    		cout << indent_str_next << "Runtime Dynamic = " << core.rt_power.readOp.dynamic << " W" << endl;
+    		cout <<endl;
 		}
+        if (numVectorEngine >0){
+            cout <<indent_str<<"Total Vector Engines: "<<XML->sys.number_of_cores << " cores "<<endl;
+            displayDeviceType(XML->sys.device_type,indent);
+            cout << indent_str_next << "Area = " << vector_engine.area.get_area()*1e-6<< " mm^2" << endl;
+            cout << indent_str_next << "Peak Dynamic = " << core.power.readOp.dynamic << " W" << endl;
+            cout << indent_str_next << "Subthreshold Leakage = "
+                << (long_channel? core.power.readOp.longer_channel_leakage:core.power.readOp.leakage) <<" W" << endl;
+            if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
+                    << (long_channel? core.power.readOp.power_gated_with_long_channel_leakage : core.power.readOp.power_gated_leakage)  << " W" << endl;
+            cout << indent_str_next << "Gate Leakage = " << core.power.readOp.gate_leakage << " W" << endl;
+            cout << indent_str_next << "Runtime Dynamic = " << core.rt_power.readOp.dynamic << " W" << endl;
+            cout <<endl;
+        }
 		if (!XML->sys.Private_L2)
 		{
 			if (numL2 >0){
@@ -674,6 +685,11 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp)
 				cores[i]->displayEnergy(indent+4,plevel,is_tdp);
 				cout <<"*****************************************************************************************"<<endl;
 			}
+            for (i = 0;i < numVectorEngine; i++)
+            {
+                vector_engines[i]->displayEnergy(indent+4,plevel,is_tdp);
+                cout <<"*****************************************************************************************"<<endl;
+            }
 			if (!XML->sys.Private_L2)
 			{
 				for (i = 0;i < numL2; i++)
@@ -744,6 +760,7 @@ void Processor::set_proc_param()
 	procdynp.homoL2Dir  = bool(debug?1:XML->sys.homogeneous_L2Directories);
 
 	procdynp.numCore = XML->sys.number_of_cores;
+    procdynp.numVectorEngine = 0;//XML->sys.number_of_vector_engines;
 	procdynp.numL2   = XML->sys.number_of_L2s;
 	procdynp.numL3   = XML->sys.number_of_L3s;
 	procdynp.numNOC  = XML->sys.number_of_NoCs;
@@ -854,6 +871,11 @@ Processor::~Processor(){
 		delete cores.back();
 		cores.pop_back();
 	}
+    while (!vector_engines.empty())
+    {
+        delete vector_engines.back();
+        vector_engines.pop_back();
+    }
 	while (!l2array.empty())
 	{
 		delete l2array.back();

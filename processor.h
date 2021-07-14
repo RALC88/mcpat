@@ -67,7 +67,7 @@ class Processor : public Component
     //wire  globalInterconnect;
     //clock_network globalClock;
     Component core, vector_engine, l2, l3, l1dir, l2dir, noc, mcs, cc, nius, pcies,flashcontrollers;
-    int  numCore,numLanes, numL2, numL3, numNOC, numL1Dir, numL2Dir;
+    int  numCore,numVectorEngine, numL2, numL3, numNOC, numL1Dir, numL2Dir;
     Processor(ParseXML *XML_interface);
     void compute();
     void set_proc_param();
