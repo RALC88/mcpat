@@ -137,20 +137,20 @@ Processor::Processor(ParseXML *XML_interface)
   {
     for (i = 0;i < numVectorEngine; i++)
     {
+        vector_engine.power.reset();
+        vector_engine.rt_power.reset();
+
         vector_engines.push_back(new VectorEngine(XML,i, &interface_ip));
         vector_engines[i]->computeEnergy();
         vector_engines[i]->computeEnergy(false);
-
         vector_engine.area.set_area(vector_engine.area.get_area() + vector_engines[i]->area.get_area());
+        set_pppm(pppm_t,vector_engines[i]->clockRate*procdynp.numVectorEngine, procdynp.numVectorEngine,procdynp.numVectorEngine,procdynp.numVectorEngine);
+        vector_engine.power = vector_engine.power + vector_engines[i]->power;//*pppm_t;
+        set_pppm(pppm_t,1/vector_engines[i]->executionTime, procdynp.numVectorEngine,procdynp.numVectorEngine,procdynp.numVectorEngine);
+        vector_engine.rt_power = vector_engine.rt_power + vector_engines[i]->rt_power;//*pppm_t;
         area.set_area(area.get_area() + vector_engines[i]->area.get_area());//placement and routing overhead is 10%, core scales worse than cache 40% is accumulated from 90 to 22nm
-
-        set_pppm(pppm_t,vector_engines[i]->clockRate, 1, 1, 1);
-        vector_engine.power = vector_engine.power + vector_engines[i]->power*pppm_t;
-        power = power  + vector_engines[i]->power*pppm_t;
-
-        set_pppm(pppm_t,1/vector_engines[i]->executionTime, 1, 1, 1);
-        vector_engine.rt_power = vector_engine.rt_power + vector_engines[i]->rt_power*pppm_t;
-        rt_power = rt_power  + vector_engines[i]->rt_power*pppm_t;
+        power = power  + vector_engine.power;
+        rt_power = rt_power  + vector_engine.rt_power;
     }
   }
 
@@ -543,7 +543,7 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp)
     		cout <<endl;
 		}
         if (numVectorEngine >0){
-            cout <<indent_str<<"Total Vector Engines: "<<XML->sys.number_of_cores << " cores "<<endl;
+            cout <<indent_str<<"Total Vector Engines: "<<XML->sys.number_of_cores << " vector engines "<<endl;
             displayDeviceType(XML->sys.device_type,indent);
             cout << indent_str_next << "Area = " << vector_engine.area.get_area()*1e-6<< " mm^2" << endl;
             cout << indent_str_next << "Peak Dynamic = " << vector_engine.power.readOp.dynamic << " W" << endl;

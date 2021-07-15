@@ -51,7 +51,6 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
  vrf (0),
  exist(exist_)
  {
- 	cout << "Creating VRF" << endl;
 	/*
 	 * processors have separate architectural register files for each thread.
 	 * therefore, the bypass buses need to travel across all the register files.
@@ -101,7 +100,6 @@ VEXECU::VEXECU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_
  mul(0),
  exist(exist_)
 {
-	cout << "Creating Vector exec" << endl;
 	  bool exist_flag = true;
 	  if (!exist) return;
 	  double fu_height = 0.0;
@@ -111,13 +109,11 @@ VEXECU::VEXECU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_
 	  exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, ALU);
 	  area.set_area(area.get_area()+ exeu->area.get_area() + vector_reg_file->area.get_area());
 	  fu_height = exeu->FU_height;
-	  cout << "vectordynp.num_fpus " << vectordynp.num_fpus << endl;
 	  if (vectordynp.num_fpus >0)
 	  {
 		  fp_u  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, FPU);
 		  area.set_area(area.get_area()+ fp_u->area.get_area());
 	  }
-	  cout << "vectordynp.num_muls " << vectordynp.num_muls << endl;
 	  if (vectordynp.num_muls >0)
 	  {
 		  mul   = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, MUL);
@@ -159,7 +155,6 @@ VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* in
  exu(0)
 {
 
-cout << "Creating Vector lane" << endl;
  /*
   * initialize, compute and optimize individual components.
   */
@@ -200,8 +195,6 @@ VectorEngine::VectorEngine(ParseXML* XML_interface, int ithCore_, InputParameter
   numLanes = vectordynp.lanes;
   clockRate = vectordynp.clockRate;
   executionTime = vectordynp.executionTime;
-
-cout << "Creating Vector engine with " << numLanes << " Lanes" << endl;
 
     for (int i = 0;i < numLanes; i++)
     {
@@ -254,7 +247,7 @@ void VReg::computeEnergy(bool is_tdp)
 
 	if (is_tdp)
 	{
-		vrf->power  =  vrf->power_t + ((vectordynp.scheu_ty==ReservationStation) ? (vrf->local_result.power *vectordynp.pppm_lkg_multhread):vrf->local_result.power);
+		vrf->power  =  vrf->power_t + vrf->local_result.power;
 		power	    =  power + (vrf->power);
 	}
 	else
@@ -438,15 +431,15 @@ void VectorLane::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 
 	if (is_tdp)
 	{
-		cout << "Vector Lane:" << endl;
-		cout << indent_str << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
-		cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
-		cout << indent_str << "Subthreshold Leakage = "
+		cout << indent_str << "Vector Lane:" << endl;
+		cout << indent_str_next << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
+		cout << indent_str_next << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
+		cout << indent_str_next << "Subthreshold Leakage = "
 			<< (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
 		if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
 				<< (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
-		cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
-		cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
+		cout << indent_str_next << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
+		cout << indent_str_next << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
 		cout<<endl;
 		if (exu->exist)
 		{
@@ -499,7 +492,7 @@ void VectorEngine::computeEnergy(bool is_tdp)
 		}
 		else
 		{
-          
+
         }
     }
 
@@ -517,13 +510,13 @@ void VectorEngine::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 	{
 		cout << "Vector Engine" << endl;
 		cout << indent_str << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
-		cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
+		cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic/**clockRate*/ << " W" << endl;
 		cout << indent_str << "Subthreshold Leakage = "
 			<< (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
 		if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
 				<< (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
 		cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
-		cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
+		cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/*/executionTime*/ << " W" << endl;
 		cout<<endl;
 		
 	}
@@ -571,14 +564,6 @@ void VectorEngine::set_vector_param()
     vectordynp.num_fpus      		= XML->sys.vector_engine[ithCore].FPU_per_lane;
     vectordynp.num_muls      		= XML->sys.vector_engine[ithCore].MUL_per_lane;
     vectordynp.num_alus				= XML->sys.vector_engine[ithCore].ALU_per_lane;
-
-    cout << "FPU_per_lane " << XML->sys.vector_engine[ithCore].FPU_per_lane << endl;
-    cout << "MUL_per_lane " << XML->sys.vector_engine[ithCore].MUL_per_lane << endl;
-    cout << "ALU_per_lane " << XML->sys.vector_engine[ithCore].ALU_per_lane << endl;
-
-	cout << "vectordynp.num_fpus " << vectordynp.num_fpus << endl;
-    cout << "vectordynp.num_muls " << vectordynp.num_muls << endl;
-    cout << "vectordynp.num_alus " << vectordynp.num_alus << endl;
 
     vectordynp.vdd	       = XML->sys.vector_engine[ithCore].vdd;
     vectordynp.power_gating_vcc	   = XML->sys.vector_engine[ithCore].power_gating_vcc;
