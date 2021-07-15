@@ -51,6 +51,7 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
  vrf (0),
  exist(exist_)
  {
+ 	cout << "Creating VRF" << endl;
 	/*
 	 * processors have separate architectural register files for each thread.
 	 * therefore, the bypass buses need to travel across all the register files.
@@ -78,13 +79,13 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
 	interface_ip.obj_func_dyn_power  = 0;
 	interface_ip.obj_func_leak_power = 0;
 	interface_ip.obj_func_cycle_t    = 1;
-	interface_ip.num_rw_ports    = 1;//this is the transfer port for saving/restoring states when exceptions happen.
-	interface_ip.num_rd_ports    = 2*1;//2*vectordynp.vector_peak_issueW;
-	interface_ip.num_wr_ports    = 2*1;//vectordynp.vector_peak_issueW;
+	interface_ip.num_rw_ports    = 0;//this is the transfer port for saving/restoring states when exceptions happen.
+	interface_ip.num_rd_ports    = 4;//2*vectordynp.vector_peak_issueW;
+	interface_ip.num_wr_ports    = 2;//vectordynp.vector_peak_issueW;
 	interface_ip.num_se_rd_ports = 0;
 	vrf = new ArrayST(&interface_ip, "Vector Register File", Core_device, vectordynp.opt_local, vectordynp.vector_ty);
-	vrf->area.set_area(vrf->area.get_area()+ vrf->local_result.area*vectordynp.vector_num_pipelines*cdb_overhead);
-	area.set_area(area.get_area()+ vrf->local_result.area*vectordynp.vector_num_pipelines*cdb_overhead);
+	vrf->area.set_area(vrf->area.get_area()+ vrf->local_result.area*cdb_overhead);
+	area.set_area(area.get_area()+ vrf->local_result.area*cdb_overhead);
 	//area.set_area(area.get_area()*cdb_overhead);
 	//output_data_csv(VRF.RF.local_result);
  }
@@ -100,6 +101,7 @@ VEXECU::VEXECU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_
  mul(0),
  exist(exist_)
 {
+	cout << "Creating Vector exec" << endl;
 	  bool exist_flag = true;
 	  if (!exist) return;
 	  double fu_height = 0.0;
@@ -109,12 +111,14 @@ VEXECU::VEXECU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_
 	  exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, ALU);
 	  area.set_area(area.get_area()+ exeu->area.get_area() + vector_reg_file->area.get_area());
 	  fu_height = exeu->FU_height;
-	  if (vectordynp.vector_num_fpus >0)
+	  cout << "vectordynp.num_fpus " << vectordynp.num_fpus << endl;
+	  if (vectordynp.num_fpus >0)
 	  {
 		  fp_u  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, FPU);
 		  area.set_area(area.get_area()+ fp_u->area.get_area());
 	  }
-	  if (vectordynp.vector_num_muls >0)
+	  cout << "vectordynp.num_muls " << vectordynp.num_muls << endl;
+	  if (vectordynp.num_muls >0)
 	  {
 		  mul   = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, MUL);
 		  area.set_area(area.get_area()+ mul->area.get_area());
@@ -146,13 +150,16 @@ VEXECU::VEXECU(ParseXML* XML_interface, int ithCore_, InputParameter* interface_
 }
 
 
-VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_)
+VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_)
 :XML(XML_interface),
  ithCore(ithCore_),
  interface_ip(*interface_ip_),
+ vectordynp(dyn_p_),
+ exist(exist_),
  exu(0)
 {
 
+cout << "Creating Vector lane" << endl;
  /*
   * initialize, compute and optimize individual components.
   */
@@ -185,17 +192,20 @@ VectorEngine::VectorEngine(ParseXML* XML_interface, int ithCore_, InputParameter
   * initialize, compute and optimize individual components.
   */
 
-  bool exit_flag = false; // bool exit_flag = true; // Checar que es esto
+  bool exit_flag = true;
 
   double pipeline_area_per_unit;
   set_vector_param();
 
+  numLanes = vectordynp.lanes;
   clockRate = vectordynp.clockRate;
   executionTime = vectordynp.executionTime;
 
+cout << "Creating Vector engine with " << numLanes << " Lanes" << endl;
+
     for (int i = 0;i < numLanes; i++)
     {
-          lanes.push_back(new VectorLane(XML,i, &interface_ip));
+          lanes.push_back(new VectorLane(XML,i, &interface_ip,vectordynp,exit_flag));
           lanes[i]->computeEnergy();
           lanes[i]->computeEnergy(false);
 
@@ -225,9 +235,9 @@ void VReg::computeEnergy(bool is_tdp)
     {
     	//init stats for Peak
     	vrf->stats_t.readAc.access  = vectordynp.vector_issueW*2*(vectordynp.ALU_duty_cycle*1.1+
-    			(vectordynp.vector_num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
+    			(vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
     	vrf->stats_t.writeAc.access  = vectordynp.vector_issueW*(vectordynp.ALU_duty_cycle*1.1+
-    			(vectordynp.vector_num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
+    			(vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
     	//Rule of Thumb: about 10% RF related instructions do not need to access ALUs
     	vrf->tdp_stats = vrf->stats_t;
      }
@@ -292,22 +302,22 @@ void VEXECU::computeEnergy(bool is_tdp)
 	vector_reg_file->computeEnergy(is_tdp);
 	exeu->computeEnergy(is_tdp);
 
-	if (vectordynp.vector_num_fpus >0)
+	if (vectordynp.num_fpus >0)
 	{
 		fp_u->computeEnergy(is_tdp);
 	}
-	if (vectordynp.vector_num_muls >0)
+	if (vectordynp.num_muls >0)
 	{
 		mul->computeEnergy(is_tdp);
 	}
 
 	if (is_tdp)
 	{
-		if (vectordynp.vector_num_muls >0)
+		if (vectordynp.num_muls >0)
 		{
 			power      = power + mul->power;
 		}
-		if (vectordynp.vector_num_fpus>0)
+		if (vectordynp.num_fpus>0)
 		{
 			power      = power + fp_u->power;
 		}
@@ -316,12 +326,12 @@ void VEXECU::computeEnergy(bool is_tdp)
 	}
 	else
 	{
-		if (vectordynp.vector_num_muls >0)
+		if (vectordynp.num_muls >0)
 		{
 			rt_power      = rt_power + mul->rt_power;
 		}
 
-		if (vectordynp.vector_num_fpus>0)
+		if (vectordynp.num_fpus>0)
 		{
 			rt_power      = rt_power + fp_u->rt_power;
 		}
@@ -353,11 +363,11 @@ void VEXECU::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 			vector_reg_file->displayEnergy(indent+4,is_tdp);
 		}
 		exeu->displayEnergy(indent,is_tdp);
-		if (vectordynp.vector_num_fpus>0)
+		if (vectordynp.num_fpus>0)
 		{
 			fp_u->displayEnergy(indent,is_tdp);
 		}
-		if (vectordynp.vector_num_muls >0)
+		if (vectordynp.num_muls >0)
 		{
 			mul->displayEnergy(indent,is_tdp);
 		}
@@ -503,29 +513,29 @@ void VectorEngine::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 	bool long_channel = XML->sys.longer_channel_device;
 	bool power_gating = XML->sys.power_gating;
 
+	if (is_tdp)
+	{
+		cout << "Vector Engine" << endl;
+		cout << indent_str << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
+		cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
+		cout << indent_str << "Subthreshold Leakage = "
+			<< (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
+		if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
+				<< (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
+		cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
+		cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
+		cout<<endl;
+		
+	}
+	else
+	{
 
+	}
     for (int i = 0;i < numLanes; i++)
     {
-    	if (is_tdp)
-		{
-			cout << "Vector Engine:" << endl;
-			cout << indent_str << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
-			cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
-			cout << indent_str << "Subthreshold Leakage = "
-				<< (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
-			if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
-					<< (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
-			cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
-			cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
-			cout<<endl;
-			if (plevel >2){
+    	if (plevel >2){
 				lanes[i]->displayEnergy(indent+4,plevel,is_tdp);
 			}
-		}
-		else
-		{
-
-    	}
 	}
 }
 
@@ -558,12 +568,23 @@ void VectorEngine::set_vector_param()
     vectordynp.vector_peak_issueW   = XML->sys.vector_engine[ithCore].vector_peak_issue_width;
     vectordynp.vector_commitW       = XML->sys.vector_engine[ithCore].vector_commit_width;
     vectordynp.vector_peak_commitW  = XML->sys.vector_engine[ithCore].vector_peak_issue_width;
-    vectordynp.vector_num_fpus      = XML->sys.vector_engine[ithCore].FPU_per_lane;
-    vectordynp.vector_num_muls      = XML->sys.vector_engine[ithCore].MUL_per_lane;
+    vectordynp.num_fpus      		= XML->sys.vector_engine[ithCore].FPU_per_lane;
+    vectordynp.num_muls      		= XML->sys.vector_engine[ithCore].MUL_per_lane;
+    vectordynp.num_alus				= XML->sys.vector_engine[ithCore].ALU_per_lane;
+
+    cout << "FPU_per_lane " << XML->sys.vector_engine[ithCore].FPU_per_lane << endl;
+    cout << "MUL_per_lane " << XML->sys.vector_engine[ithCore].MUL_per_lane << endl;
+    cout << "ALU_per_lane " << XML->sys.vector_engine[ithCore].ALU_per_lane << endl;
+
+	cout << "vectordynp.num_fpus " << vectordynp.num_fpus << endl;
+    cout << "vectordynp.num_muls " << vectordynp.num_muls << endl;
+    cout << "vectordynp.num_alus " << vectordynp.num_alus << endl;
+
     vectordynp.vdd	       = XML->sys.vector_engine[ithCore].vdd;
     vectordynp.power_gating_vcc	   = XML->sys.vector_engine[ithCore].power_gating_vcc;
 
-    vectordynp.vector_num_pipelines= XML->sys.vector_engine[ithCore].pipelines_per_vector_engine[0];
+    vectordynp.vector_num_pipelines= XML->sys.vector_engine[ithCore].pipelines_per_vector_engine;
+    vectordynp.lanes 				= XML->sys.vector_engine[ithCore].lanes;
 
 	vectordynp.vector_arch_reg_width  =  int(ceil(log2(XML->sys.vector_engine[ithCore].archi_Regs_VRF_size)));
 	vectordynp.num_VRF_entry    = XML->sys.vector_engine[ithCore].archi_Regs_VRF_size;

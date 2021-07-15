@@ -92,9 +92,10 @@ class VectorLane :public Component {
     double scktRatio, chip_PR_overhead, macro_PR_overhead;
     VEXECU      * exu;
     CoreDynParam  vectordynp;
-    //full_decoder  inst_decoder;
-    //clock_network clockNetwork;
-    VectorLane(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_);
+
+    bool exist;
+
+    VectorLane(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_=true);
 //    void set_lane_param();
     void computeEnergy(bool is_tdp=true);
     void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
