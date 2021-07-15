@@ -3,6 +3,7 @@
 	<component id="system" name="system">
 		<!--McPAT will skip the components if number is set to 0 -->
 		<param name="number_of_cores" value="1"/>
+		<param name="number_of_vector_engines" value="1"/>
 		<param name="number_of_L1Directories" value="0"/>
 		<param name="number_of_L2Directories" value="1"/>
 		<param name="number_of_L2s" value="1"/> <!-- This number means how many L2 clusters in each cluster there can be multiple banks/ports -->
@@ -16,7 +17,7 @@
 		<param name="homogeneous_L3s" value="1"/>
 		<param name="homogeneous_ccs" value="1"/><!--cache coherence hardware -->
 		<param name="homogeneous_NoCs" value="1"/>
-		<param name="core_tech_node" value="180"/><!-- nm -->
+		<param name="core_tech_node" value="22"/><!-- nm -->
 		<param name="target_core_clockrate" value="1200"/><!--MHz -->
 		<param name="temperature" value="380"/> <!-- Kelvin -->
 		<param name="number_cache_levels" value="2"/>
@@ -257,7 +258,48 @@
 				<stat name="read_accesses" value="400000"/> <!--See IFU code for guideline -->
 				<stat name="write_accesses" value="0"/>
 			</component>
-	</component>
+		</component>
+		<component id="system.vector_engine0" name="vector_engine0">
+				<!-- all the buffer related are optional -->
+			    <param name="clock_rate" value="3400"/>
+				<param name="device_type" value="0"/>
+
+				<param name="lanes" value="8"/>
+				<param name="mvl" value="16"/>
+				<param name="vrf_ports" value="4,2,1"/>
+				<!-- number of r, w, and rw search ports -->
+				<param name="phy_Regs_VRF_size" value="64"/>
+				<param name="archi_Regs_VRF_size" value="32"/>
+				<param name="vector_issue_width" value="1"/>
+				<param name="vector_peak_issue_width" value="1"/>
+				<param name="vector_commit_width" value="1"/>
+				<param name="vector_machine_type" value="0"/> 
+				<!-- inorder/OoO; 1 inorder; 0 OOO-->
+				<param name="FPU_per_lane" value="1"/>
+				<param name="MUL_per_lane" value="1"/>
+				<param name="ALU_per_lane" value="1"/>
+				<param name="pipelines_per_vector_engine" value="1"/>
+
+				<!-- although there are multiple access types, 
+				Performance simulator needs to cast them into reads or writes
+				e.g. the invalidates can be considered as writes -->
+				<stat name="pipeline_duty_cycle" value="1"/>
+				<stat name="total_cycles" value="100000"/>
+				<stat name="busy_cycles" value="100000"/>
+				<stat name="idle_cycles" value="0"/>
+
+				<stat name="ALU_duty_cycle" value="1"/>
+				<stat name="MUL_duty_cycle" value="0.3"/>
+				<stat name="FPU_duty_cycle" value="1"/>
+
+				<stat name="vec_regfile_reads" value="100000"/>
+				<stat name="vec_regfile_writes" value="50000"/>
+
+				<stat name="total_accesses" value="400000"/>
+				<stat name="read_accesses" value="200000"/>
+				<stat name="write_accesses" value="200000"/>
+				<stat name="duty_cycle" value="1"/>
+		</component>
 		<component id="system.L1Directory0" name="L1Directory0">
 				<param name="Directory_type" value="0"/>
 			    <!--0 cam based shadowed tag. 1 directory cache -->	
