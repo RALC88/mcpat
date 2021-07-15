@@ -294,11 +294,13 @@ typedef struct{
 typedef struct{
 	//params
 	int clock_rate;
+	int device_type;
+	double vdd;
+	double power_gating_vcc;
+
 	int lanes;
 	double mvl;
-	//int pipelines_per_lane[20];
-	int vrf_ports;
-	int device_type;
+	int vrf_ports[20];
 	int phy_Regs_VRF_size;  // nuevo
     int archi_Regs_VRF_size;
 
@@ -309,7 +311,8 @@ typedef struct{
 
 	int FPU_per_lane;
 	int MUL_per_lane;
-	int pipelines_per_vector_engine[20];
+	int ALU_per_lane;
+	int pipelines_per_vector_engine;
 
 	int pipeline_duty_cycle;
 	int total_cycles;
@@ -319,9 +322,6 @@ typedef struct{
 	int ALU_duty_cycle;
 	int MUL_duty_cycle;
 	int FPU_duty_cycle;
-
-	double vdd;
-	double power_gating_vcc;
 
 	//stats
 	double vec_regfile_reads; // nuevo

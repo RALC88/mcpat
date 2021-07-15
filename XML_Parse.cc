@@ -596,8 +596,101 @@ void ParseXML::parse(char* filepath)
 			}
 		}
 
-		//__________________________________________Get system.L1Directory0-n____________________________________________
+//__________________________________________Get system.vector_engine0-n____________________________________________
 		int w,tmpOrderofComponents_3layer;
+		w=OrderofComponents_3layer+1;
+		tmpOrderofComponents_3layer=OrderofComponents_3layer;
+		if (sys.number_of_vector_engines==1) OrderofComponents_3layer=OrderofComponents_3layer+1;
+		else OrderofComponents_3layer=OrderofComponents_3layer+sys.number_of_vector_engines;
+
+		for (i=0; i<(OrderofComponents_3layer-tmpOrderofComponents_3layer); i++)
+		{
+			xNode3=xNode2.getChildNode("component",w);
+			if (xNode3.isEmpty()==1) {
+				printf("The value of number_of_vector_engines is not correct!");
+				exit(0);
+			}
+			else
+			{
+				if (strstr(xNode3.getAttribute("id"),"vector_engine")!=NULL)
+				{
+					itmp=xNode3.nChildNode("param");
+					for(k=0; k<itmp; k++)
+					{ //get all items of param in system.vector_engine
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"clock_rate")==0) {sys.vector_engine[i].clock_rate=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vdd")==0) {sys.vector_engine[i].vdd=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"power_gating_vcc")==0) {sys.vector_engine[i].power_gating_vcc=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"device_type")==0) {sys.vector_engine[i].device_type=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"lanes")==0) {sys.vector_engine[i].lanes=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"mvl")==0) {sys.vector_engine[i].mvl=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_ports")==0)
+						{
+							strtmp.assign(xNode3.getChildNode("param",k).getAttribute("value"));
+							m=0;
+							for(n=0; n<strtmp.length(); n++)
+							{
+								if (strtmp[n]!=',')
+								{
+									sprintf(chtmp,"%c",strtmp[n]);
+									strcat(chtmp1,chtmp);
+								}
+								else{
+									sys.vector_engine[i].vrf_ports[m]=atoi(chtmp1);
+									m++;
+									chtmp1[0]='\0';
+								}
+							}
+							sys.vector_engine[i].vrf_ports[m]=atoi(chtmp1);
+							m++;
+							chtmp1[0]='\0';
+							continue;
+						}
+
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"phy_Regs_VRF_size")==0) {sys.vector_engine[i].phy_Regs_VRF_size=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"archi_Regs_VRF_size")==0) {sys.vector_engine[i].archi_Regs_VRF_size=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_issue_width")==0) {sys.vector_engine[i].vector_issue_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_peak_issue_width")==0) {sys.vector_engine[i].vector_peak_issue_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_commit_width")==0) {sys.vector_engine[i].vector_commit_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_machine_type")==0) {sys.vector_engine[i].vector_machine_type=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"FPU_per_lane")==0) {sys.vector_engine[i].FPU_per_lane=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"MUL_per_lane")==0) {sys.vector_engine[i].MUL_per_lane=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"ALU_per_lane")==0) {sys.vector_engine[i].ALU_per_lane=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"pipelines_per_vector_engine")==0) {sys.vector_engine[i].pipelines_per_vector_engine=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+					}
+
+					itmp=xNode3.nChildNode("stat");
+					for(k=0; k<itmp; k++)
+					{ //get all items of stat in system.vector_engine
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"pipeline_duty_cycle")==0) {sys.vector_engine[i].pipeline_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"total_cycles")==0) {sys.vector_engine[i].total_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"busy_cycles")==0) {sys.vector_engine[i].busy_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"idle_cycles")==0) {sys.vector_engine[i].idle_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"ALU_duty_cycle")==0) {sys.vector_engine[i].ALU_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"MUL_duty_cycle")==0) {sys.vector_engine[i].MUL_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"FPU_duty_cycle")==0) {sys.vector_engine[i].FPU_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"vec_regfile_reads")==0) {sys.vector_engine[i].vec_regfile_reads=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"vec_regfile_writes")==0) {sys.vector_engine[i].vec_regfile_writes=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.vector_engine[i].total_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.vector_engine[i].read_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.vector_engine[i].write_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"duty_cycle")==0) {sys.vector_engine[i].duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+					}
+					w=w+1;
+				}
+				else {
+					printf("The value of number_of_vector_engines is not correct!");
+					exit(0);
+				}
+			}
+		}
+
+		//__________________________________________Get system.L1Directory0-n____________________________________________
+		//int w,tmpOrderofComponents_3layer;
 		w=OrderofComponents_3layer+1;
 		tmpOrderofComponents_3layer=OrderofComponents_3layer;
 		if (sys.homogeneous_L1Directories==1) OrderofComponents_3layer=OrderofComponents_3layer+1;
@@ -1420,7 +1513,7 @@ void ParseXML::initialize() //Initialize all
 {
 	//All number_of_* at the level of 'system' 03/21/2009
 	sys.number_of_cores=1;
-	sys.number_of_vector_engines=0; // Check 
+	sys.number_of_vector_engines=1;
 	sys.number_of_L1Directories=1;
 	sys.number_of_L2Directories=1;
 	sys.number_of_L2s=1;
@@ -1635,6 +1728,48 @@ void ParseXML::initialize() //Initialize all
 		sys.core[i].BTB.read_misses=1;
 		sys.core[i].BTB.write_misses=1;
 		sys.core[i].BTB.replacements=1;
+	}
+
+	//system_vector_engine
+	for (i=0; i<=63; i++)
+	{
+		sys.vector_engine[i].clock_rate=1;
+		sys.vector_engine[i].vdd =0;
+		sys.vector_engine[i].power_gating_vcc = -1;
+		sys.vector_engine[i].device_type=1;
+
+		sys.vector_engine[i].lanes=1;
+		sys.vector_engine[i].mvl=1;
+		//sys.vector_engine[i].vrf_ports[20]=1;
+		sys.vector_engine[i].phy_Regs_VRF_size=1;
+		sys.vector_engine[i].archi_Regs_VRF_size =1;
+
+		sys.vector_engine[i].vector_issue_width =1;
+		sys.vector_engine[i].vector_peak_issue_width =1;
+		sys.vector_engine[i].vector_commit_width =1;
+		sys.vector_engine[i].vector_machine_type =1;
+
+		sys.vector_engine[i].FPU_per_lane =1;
+		sys.vector_engine[i].MUL_per_lane =1;
+		sys.vector_engine[i].ALU_per_lane =1;
+		sys.vector_engine[i].pipelines_per_vector_engine =1;
+
+		sys.vector_engine[i].pipeline_duty_cycle =1;
+		sys.vector_engine[i].total_cycles =1;
+		sys.vector_engine[i].busy_cycles =1;
+		sys.vector_engine[i].idle_cycles =1;
+
+		sys.vector_engine[i].ALU_duty_cycle =1;
+		sys.vector_engine[i].MUL_duty_cycle =1;
+		sys.vector_engine[i].FPU_duty_cycle =1;
+
+		sys.vector_engine[i].vec_regfile_reads =1;
+		sys.vector_engine[i].vec_regfile_writes =1;
+
+		sys.vector_engine[i].total_accesses =1;
+		sys.vector_engine[i].read_accesses =1;
+		sys.vector_engine[i].write_accesses =1;
+		sys.vector_engine[i].duty_cycle =1;
 	}
 
 	//system_L1directory
