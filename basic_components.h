@@ -179,14 +179,15 @@ public:
     // Vector Engine
     enum Core_type vector_ty;
     int num_VRF_entry;
+    int lanes;
     int vector_data_width;
     int vector_issueW;
     int vector_peak_issueW;
     int vector_commitW;
     int vector_peak_commitW;
     int vector_num_pipelines; // Per lane
-    int vector_num_fpus; // FPU per lane
-    int vector_num_muls;
+//    int vector_num_fpus; // FPU per lane
+//    int vector_num_muls;
     int vector_arch_reg_width;
 
     ~CoreDynParam(){};

@@ -65,6 +65,8 @@ Processor::Processor(ParseXML *XML_interface)
   else
 	  numCore = procdynp.numCore;
 
+  numVectorEngine = procdynp.numVectorEngine;
+
   if (procdynp.homoL2)
 	  numL2 = procdynp.numL2==0? 0:1;
   else
@@ -544,13 +546,13 @@ void Processor::displayEnergy(uint32_t indent, int plevel, bool is_tdp)
             cout <<indent_str<<"Total Vector Engines: "<<XML->sys.number_of_cores << " cores "<<endl;
             displayDeviceType(XML->sys.device_type,indent);
             cout << indent_str_next << "Area = " << vector_engine.area.get_area()*1e-6<< " mm^2" << endl;
-            cout << indent_str_next << "Peak Dynamic = " << core.power.readOp.dynamic << " W" << endl;
+            cout << indent_str_next << "Peak Dynamic = " << vector_engine.power.readOp.dynamic << " W" << endl;
             cout << indent_str_next << "Subthreshold Leakage = "
-                << (long_channel? core.power.readOp.longer_channel_leakage:core.power.readOp.leakage) <<" W" << endl;
+                << (long_channel? vector_engine.power.readOp.longer_channel_leakage:vector_engine.power.readOp.leakage) <<" W" << endl;
             if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-                    << (long_channel? core.power.readOp.power_gated_with_long_channel_leakage : core.power.readOp.power_gated_leakage)  << " W" << endl;
-            cout << indent_str_next << "Gate Leakage = " << core.power.readOp.gate_leakage << " W" << endl;
-            cout << indent_str_next << "Runtime Dynamic = " << core.rt_power.readOp.dynamic << " W" << endl;
+                    << (long_channel? vector_engine.power.readOp.power_gated_with_long_channel_leakage : vector_engine.power.readOp.power_gated_leakage)  << " W" << endl;
+            cout << indent_str_next << "Gate Leakage = " << vector_engine.power.readOp.gate_leakage << " W" << endl;
+            cout << indent_str_next << "Runtime Dynamic = " << vector_engine.rt_power.readOp.dynamic << " W" << endl;
             cout <<endl;
         }
 		if (!XML->sys.Private_L2)
@@ -758,9 +760,8 @@ void Processor::set_proc_param()
 	procdynp.homoNOC  = bool(debug?1:XML->sys.homogeneous_NoCs);
 	procdynp.homoL1Dir  = bool(debug?1:XML->sys.homogeneous_L1Directories);
 	procdynp.homoL2Dir  = bool(debug?1:XML->sys.homogeneous_L2Directories);
-
 	procdynp.numCore = XML->sys.number_of_cores;
-    procdynp.numVectorEngine = 0;//XML->sys.number_of_vector_engines;
+    procdynp.numVectorEngine = XML->sys.number_of_vector_engines;
 	procdynp.numL2   = XML->sys.number_of_L2s;
 	procdynp.numL3   = XML->sys.number_of_L3s;
 	procdynp.numNOC  = XML->sys.number_of_NoCs;
