@@ -41,7 +41,7 @@
 #include "basic_components.h"
 #include "sharedcache.h"
 
-class VReg :public Component {
+class VRegBank :public Component {
   public:
 
 	ParseXML *XML;
@@ -50,15 +50,39 @@ class VReg :public Component {
 	CoreDynParam  vectordynp;
 	double clockRate,executionTime;
 	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	double int_regfile_height, fp_regfile_height;
-	ArrayST * vrf;
+	ArrayST * vrf_bank;
 	bool exist;
 
-	VReg(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
+	VRegBank(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_,const CoreDynParam & dyn_p_, bool exist_=true);
     void computeEnergy(bool is_tdp=true);
     void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~VReg();
+	~VRegBank();
 };
+
+
+class VRegFile :public Component {
+  public:
+
+    ParseXML *XML;
+    int  ithCore;
+    InputParameter interface_ip;
+    double clockRate,executionTime;
+    double scktRatio, chip_PR_overhead, macro_PR_overhead;
+    int banksPerLane;
+    CoreDynParam  vectordynp;
+
+    vector<VRegBank *> vector_reg_banks;
+    bool exist;
+
+    Component vector_reg_file_slice;
+
+    VRegFile(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_=true);
+//    void set_lane_param();
+    void computeEnergy(bool is_tdp=true);
+    void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
+    ~VRegFile();
+};
+
 
 class VectorLane :public Component {
   public:
@@ -70,7 +94,7 @@ class VectorLane :public Component {
     double scktRatio, chip_PR_overhead, macro_PR_overhead;
     CoreDynParam  vectordynp;
 
-    VReg           * vector_reg_file;
+    VRegFile       * vector_reg_file;
     FunctionalUnit * fp_u;
     FunctionalUnit * exeu;
     FunctionalUnit * mul;

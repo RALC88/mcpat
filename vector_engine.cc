@@ -43,12 +43,12 @@
 //#include "globalvar.h"
 
 
-VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_,bool exist_)
+VRegBank::VRegBank(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_,bool exist_)
 :XML(XML_interface),
  ithCore(ithCore_),
  interface_ip(*interface_ip_),
  vectordynp(dyn_p_),
- vrf (0),
+ vrf_bank (0),
  exist(exist_)
  {
     /*
@@ -81,12 +81,42 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
     interface_ip.num_rd_ports    = vectordynp.vrf_read_ports;
     interface_ip.num_wr_ports    = vectordynp.vrf_write_ports;
     interface_ip.num_se_rd_ports = 0;
-    vrf = new ArrayST(&interface_ip, "Vector Register File", Core_device, vectordynp.opt_local, vectordynp.vector_ty);
-    vrf->area.set_area(vrf->area.get_area()+ vrf->local_result.area*cdb_overhead);
-    area.set_area(area.get_area()+ vrf->local_result.area*cdb_overhead);
+    vrf_bank = new ArrayST(&interface_ip, "Vector Register File", Core_device, vectordynp.opt_local, vectordynp.vector_ty);
+    vrf_bank->area.set_area(vrf_bank->area.get_area()+ vrf_bank->local_result.area*cdb_overhead);
+    area.set_area(area.get_area()+ vrf_bank->local_result.area*cdb_overhead);
     //area.set_area(area.get_area()*cdb_overhead);
     //output_data_csv(VRF.RF.local_result);
  }
+
+
+VRegFile::VRegFile(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_)
+:XML(XML_interface),
+ ithCore(ithCore_),
+ interface_ip(*interface_ip_),
+ vectordynp(dyn_p_),
+ exist(exist_)
+{
+      bool exist_flag = true;
+      if (!exist) return;
+      clockRate = vectordynp.clockRate;
+      executionTime = vectordynp.executionTime;
+      banksPerLane = vectordynp.banks_per_lane;
+
+      //vector_reg_banks = new VRegBank(XML, ithCore, &interface_ip,vectordynp);
+      //area.set_area(area.get_area() + vector_reg_banks->area.get_area());
+
+    for (int i = 0;i < banksPerLane; i++)
+    {
+          vector_reg_banks.push_back(new VRegBank(XML, ithCore, &interface_ip,vectordynp));
+          vector_reg_banks[i]->computeEnergy();
+          vector_reg_banks[i]->computeEnergy(false);
+
+          vector_reg_file_slice.area.set_area(vector_reg_file_slice.area.get_area() + vector_reg_banks[i]->area.get_area());
+          area.set_area(area.get_area() + vector_reg_banks[i]->area.get_area());
+    }
+
+}
+
 
 VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_)
 :XML(XML_interface),
@@ -105,7 +135,7 @@ VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* in
       clockRate = vectordynp.clockRate;
       executionTime = vectordynp.executionTime;
 
-      vector_reg_file   = new VReg(XML, ithCore, &interface_ip,vectordynp);
+      vector_reg_file   = new VRegFile(XML, ithCore, &interface_ip,vectordynp);
       area.set_area(area.get_area() + vector_reg_file->area.get_area());
 
       if (vectordynp.num_alus >0)
@@ -167,7 +197,7 @@ VectorEngine::VectorEngine(ParseXML* XML_interface, int ithCore_, InputParameter
 }
 
 
-void VReg::computeEnergy(bool is_tdp)
+void VRegBank::computeEnergy(bool is_tdp)
 {
 /*
  * Architecture RF and physical RF cannot be present at the same time.
@@ -178,38 +208,71 @@ void VReg::computeEnergy(bool is_tdp)
     if (is_tdp)
     {
         //init stats for Peak
-        vrf->stats_t.readAc.access  = vectordynp.vector_issueW*2*(vectordynp.ALU_duty_cycle*1.1+
+        vrf_bank->stats_t.readAc.access  = vectordynp.vector_issueW*2*(vectordynp.ALU_duty_cycle*1.1+
                 (vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
-        vrf->stats_t.writeAc.access  = vectordynp.vector_issueW*(vectordynp.ALU_duty_cycle*1.1+
+        vrf_bank->stats_t.writeAc.access  = vectordynp.vector_issueW*(vectordynp.ALU_duty_cycle*1.1+
                 (vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
         //Rule of Thumb: about 10% RF related instructions do not need to access ALUs
-        vrf->tdp_stats = vrf->stats_t;
+        vrf_bank->tdp_stats = vrf_bank->stats_t;
      }
     else
     {
         //init stats for Runtime Dynamic (RTP)
-        vrf->stats_t.readAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_reads;//TODO: no diff on archi and phy
-        vrf->stats_t.writeAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_writes;
-        vrf->rtp_stats = vrf->stats_t;
+        vrf_bank->stats_t.readAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_reads;//TODO: no diff on archi and phy
+        vrf_bank->stats_t.writeAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_writes;
+        vrf_bank->rtp_stats = vrf_bank->stats_t;
     }
-    vrf->power_t.reset();
-    vrf->power_t.readOp.dynamic  +=  (vrf->stats_t.readAc.access*vrf->local_result.power.readOp.dynamic
-            +vrf->stats_t.writeAc.access*vrf->local_result.power.writeOp.dynamic);
+    vrf_bank->power_t.reset();
+    vrf_bank->power_t.readOp.dynamic  +=  (vrf_bank->stats_t.readAc.access*vrf_bank->local_result.power.readOp.dynamic
+            +vrf_bank->stats_t.writeAc.access*vrf_bank->local_result.power.writeOp.dynamic);
 
     if (is_tdp)
     {
-        vrf->power  =  vrf->power_t + vrf->local_result.power;
-        power       =  power + (vrf->power);
+        vrf_bank->power  =  vrf_bank->power_t + vrf_bank->local_result.power;
+        power       =  power + (vrf_bank->power);
     }
     else
     {
-        vrf->rt_power  =  vrf->power_t + vrf->local_result.power;
-        rt_power       =  rt_power + (vrf->power_t);
+        vrf_bank->rt_power  =  vrf_bank->power_t + vrf_bank->local_result.power;
+        rt_power       =  rt_power + (vrf_bank->power_t);
     }
 }
 
 
-void VReg::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
+void VRegFile::computeEnergy(bool is_tdp)
+{
+    /*
+     * When computing TDP, power = energy_per_cycle (the value computed in this function) * clock_rate (in the display_energy function)
+     * When computing dyn_power; power = total energy (the value computed in this function) / Total execution time (cycle count / clock rate)
+     */
+    //power_point_product_masks
+    double pppm_t[banksPerLane];
+
+    for (int i = 0;i < banksPerLane; i++)
+    {
+        pppm_t[i] = 1;
+    }
+
+    for (int i = 0;i < banksPerLane; i++)
+    {
+        if (is_tdp)
+        {
+          //set_pppm(pppm_t,vector_reg_banks[i]->clockRate, 1, 1, 1);
+          vector_reg_file_slice.power = vector_reg_file_slice.power + vector_reg_banks[i]->power/**pppm_t*/;
+          power = power  + vector_reg_banks[i]->power/**pppm_t*/;
+
+          //set_pppm(pppm_t,1/vector_reg_banks[i]->executionTime, 1, 1, 1);
+          vector_reg_file_slice.rt_power = vector_reg_file_slice.rt_power + vector_reg_banks[i]->rt_power/**pppm_t*/;
+          rt_power = rt_power  + vector_reg_banks[i]->rt_power/**pppm_t*/;
+        }
+        else
+        {
+
+        }
+    }
+}
+
+void VRegFile::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 {
     if (!exist) return;
     string indent_str(indent, ' ');
@@ -219,21 +282,22 @@ void VReg::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 
     if (is_tdp)
     {   cout << indent_str << "Vector Register File:" << endl;
-        cout << indent_str_next << "Area = " << vrf->area.get_area()*1e-6<< " mm^2" << endl;
-        cout << indent_str_next << "Peak Dynamic = " << vrf->power.readOp.dynamic*clockRate << " W" << endl;
+        cout << indent_str_next << "Area = " << vector_reg_file_slice.area.get_area()*1e-6<< " mm^2" << endl;
+        cout << indent_str_next << "Peak Dynamic = " << vector_reg_file_slice.power.readOp.dynamic*clockRate << " W" << endl;
         cout << indent_str_next << "Subthreshold Leakage = "
-            << (long_channel? vrf->power.readOp.longer_channel_leakage:vrf->power.readOp.leakage) <<" W" << endl;
+            << (long_channel? vector_reg_file_slice.power.readOp.longer_channel_leakage:vector_reg_file_slice.power.readOp.leakage) <<" W" << endl;
         if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
-                << (long_channel? vrf->power.readOp.power_gated_with_long_channel_leakage : vrf->power.readOp.power_gated_leakage)  << " W" << endl;
-        cout << indent_str_next << "Gate Leakage = " << vrf->power.readOp.gate_leakage << " W" << endl;
-        cout << indent_str_next << "Runtime Dynamic = " << vrf->rt_power.readOp.dynamic/executionTime << " W" << endl;
+                << (long_channel? vector_reg_file_slice.power.readOp.power_gated_with_long_channel_leakage : vector_reg_file_slice.power.readOp.power_gated_leakage)  << " W" << endl;
+        cout << indent_str_next << "Gate Leakage = " << vector_reg_file_slice.power.readOp.gate_leakage << " W" << endl;
+        cout << indent_str_next << "Runtime Dynamic = " << vector_reg_file_slice.rt_power.readOp.dynamic/executionTime << " W" << endl;
         cout <<endl;
     }
     else
     {
-        cout << indent_str_next << "VRF    Peak Dynamic = " << vrf->rt_power.readOp.dynamic*clockRate << " W" << endl;
-        cout << indent_str_next << "VRF    Subthreshold Leakage = " << vrf->rt_power.readOp.leakage <<" W" << endl;
-        cout << indent_str_next << "VRF    Gate Leakage = " << vrf->rt_power.readOp.gate_leakage << " W" << endl;
+        cout << indent_str << "Vector Register File:" << endl;
+        cout << indent_str_next << "Peak Dynamic = " << vector_reg_file_slice.rt_power.readOp.dynamic*clockRate << " W" << endl;
+        cout << indent_str_next << "Subthreshold Leakage = " << vector_reg_file_slice.rt_power.readOp.leakage <<" W" << endl;
+        cout << indent_str_next << "Gate Leakage = " << vector_reg_file_slice.rt_power.readOp.gate_leakage << " W" << endl;
     }
 }
 
@@ -409,9 +473,14 @@ void VectorEngine::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
     }
 }
 
-VReg::~VReg(){
+VRegBank::~VRegBank(){
     if (!exist) return;
-    if(vrf)                    {delete vrf; vrf = 0;}
+    if(vrf_bank)                    {delete vrf_bank; vrf_bank = 0;}
+    }
+
+VRegFile::~VRegFile(){
+    if (!exist) return;
+//    if(vector_reg_banks)                    {delete vector_reg_banks; vector_reg_banks = 0;}
     }
 
 VectorLane::~VectorLane(){
@@ -425,7 +494,7 @@ VectorLane::~VectorLane(){
 
 VectorEngine::~VectorEngine(){
 
-//  if(exu)                    {delete exu; exu = 0;}
+//   if(lanes)                    {delete lanes; lanes = 0;}
     }
 
 void VectorEngine::set_vector_param()
