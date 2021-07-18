@@ -224,7 +224,7 @@
 			<component id="system.core0.icache" name="icache">
 				<!-- there is no write requests to itlb although writes happen to it after miss, 
 				which is actually a replacement -->
-				<param name="icache_config" value="32768,16,2,1,1,2,16,0"/>
+				<param name="icache_config" value="32768,16,2,2,1,2,16,0"/>
 				<!-- the parameters are capacity,block_width, associativity, bank, throughput w.r.t. core clock, latency w.r.t. core clock,output_width, cache policy,  -->
 				<!-- cache_policy;//0 no write or write-though with non-write allocate;1 write-back with write-allocate -->
 				<param name="buffer_sizes" value="16, 16, 16,0"/>
@@ -241,7 +241,7 @@
 			</component>
 			<component id="system.core0.dcache" name="dcache">
 			        <!-- all the buffer related are optional -->
-				<param name="dcache_config" value="32768,16,8,1,1,3,16,0"/>
+				<param name="dcache_config" value="32768,16,8,8,1,3,16,0"/>
 
 				<param name="buffer_sizes" value="16, 16, 16, 16"/>
 				<!-- cache controller buffer sizes: miss_buffer_size(MSHR),fill_buffer_size,prefetch_buffer_size,wb_buffer_size-->	
@@ -267,16 +267,17 @@
 
 				<param name="lanes" value="8"/>
 				<param name="mvl" value="16"/>
+				<param name="banks_per_lane" value="1"/>
 
 				<!-- config for one slice corresponding to one lane. Then if 8 lanes are set, this configuration will be replicated 8 times -->
 				<param name="vrf_data_width" value="64"/>
-				<param name="vrf_entries" value="128"/>
+				<!-- <param name="vrf_entries" value="1024"/> -->
 				<param name="vrf_read_ports" value="4"/>
 				<param name="vrf_write_ports" value="2"/>
 
 				<!-- number of r, w, and rw search ports -->
-				<param name="phy_Regs_VRF_size" value="64"/>
-				<param name="archi_Regs_VRF_size" value="32"/>
+				<param name="phys_vector_registers" value="64"/>
+				<param name="archi_vector_registers" value="32"/>
 				<param name="vector_issue_width" value="1"/>
 				<param name="vector_peak_issue_width" value="1"/>
 				<param name="vector_commit_width" value="1"/>

@@ -61,12 +61,12 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
     clockRate = vectordynp.clockRate;
     executionTime = vectordynp.executionTime;
     //**********************************VRF***************************************
-    data                             = (int)XML->sys.vector_engine[ithCore].vrf_data_width;
+    data                             = vectordynp.vrf_data_width;
     interface_ip.is_cache            = false;
     interface_ip.pure_cam            = false;
     interface_ip.pure_ram            = true;
-    interface_ip.line_sz             = (int)XML->sys.vector_engine[ithCore].vrf_data_width/8;
-    interface_ip.cache_sz            = (int)XML->sys.vector_engine[ithCore].vrf_entries * 8;
+    interface_ip.line_sz             = vectordynp.vrf_data_width/8;
+    interface_ip.cache_sz            = vectordynp.vrf_entries * 8;
     interface_ip.assoc               = 1;
     interface_ip.nbanks              = 1;
     interface_ip.out_w               = interface_ip.line_sz*8;
@@ -78,8 +78,8 @@ VReg::VReg(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_,
     interface_ip.obj_func_leak_power = 0;
     interface_ip.obj_func_cycle_t    = 1;
     interface_ip.num_rw_ports    = 0;//this is the transfer port for saving/restoring states when exceptions happen.
-    interface_ip.num_rd_ports    = (int)XML->sys.vector_engine[ithCore].vrf_read_ports;
-    interface_ip.num_wr_ports    = (int)XML->sys.vector_engine[ithCore].vrf_write_ports;
+    interface_ip.num_rd_ports    = vectordynp.vrf_read_ports;
+    interface_ip.num_wr_ports    = vectordynp.vrf_write_ports;
     interface_ip.num_se_rd_ports = 0;
     vrf = new ArrayST(&interface_ip, "Vector Register File", Core_device, vectordynp.opt_local, vectordynp.vector_ty);
     vrf->area.set_area(vrf->area.get_area()+ vrf->local_result.area*cdb_overhead);
@@ -104,10 +104,16 @@ VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* in
       double fu_height = 0.0;
       clockRate = vectordynp.clockRate;
       executionTime = vectordynp.executionTime;
+
       vector_reg_file   = new VReg(XML, ithCore, &interface_ip,vectordynp);
-      exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, ALU);
-      area.set_area(area.get_area()+ exeu->area.get_area() + vector_reg_file->area.get_area());
-      fu_height = exeu->FU_height;
+      area.set_area(area.get_area() + vector_reg_file->area.get_area());
+
+      if (vectordynp.num_alus >0)
+      {
+          exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, ALU);
+          area.set_area(area.get_area()+ exeu->area.get_area());
+          fu_height = exeu->FU_height;
+      }
       if (vectordynp.num_fpus >0)
       {
           fp_u  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, FPU);
@@ -119,29 +125,6 @@ VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* in
           area.set_area(area.get_area()+ mul->area.get_area());
           fu_height +=  mul->FU_height;
       }
-      /*
-       * broadcast logic, including int-broadcast; int_tag-broadcast; fp-broadcast; fp_tag-broadcast
-       * integer by pass has two paths and fp has 3 paths.
-       * on the same bus there are multiple tri-state drivers and muxes that go to different components on the same bus
-       */
-      if (XML->sys.Embedded)
-            {
-            interface_ip.wt                  =Global_30;
-            interface_ip.wire_is_mat_type = 0;
-            interface_ip.wire_os_mat_type = 0;
-            interface_ip.throughput       = 1.0/clockRate;
-            interface_ip.latency          = 1.0/clockRate;
-            }
-        else
-            {
-            interface_ip.wt                  =Global;
-            interface_ip.wire_is_mat_type = 2;//start from semi-global since local wires are already used
-            interface_ip.wire_os_mat_type = 2;
-            interface_ip.throughput       = 10.0/clockRate; //Do not care
-            interface_ip.latency          = 10.0/clockRate;
-            }
-
-      area.set_area(area.get_area());
 }
 
 VectorEngine::VectorEngine(ParseXML* XML_interface, int ithCore_, InputParameter* interface_ip_)
@@ -220,7 +203,7 @@ void VReg::computeEnergy(bool is_tdp)
     }
     else
     {
-        vrf->rt_power  =  vrf->power_t + ((vectordynp.scheu_ty==ReservationStation) ? (vrf->local_result.power *vectordynp.pppm_lkg_multhread):vrf->local_result.power);
+        vrf->rt_power  =  vrf->power_t + vrf->local_result.power;
         rt_power       =  rt_power + (vrf->power_t);
     }
 }
@@ -261,8 +244,11 @@ void VectorLane::computeEnergy(bool is_tdp)
     double pppm_t[4]    = {1,1,1,1};
 
     vector_reg_file->computeEnergy(is_tdp);
-    exeu->computeEnergy(is_tdp);
-
+    
+    if (vectordynp.num_alus >0)
+    {
+        exeu->computeEnergy(is_tdp);
+    }
     if (vectordynp.num_fpus >0)
     {
         fp_u->computeEnergy(is_tdp);
@@ -274,6 +260,10 @@ void VectorLane::computeEnergy(bool is_tdp)
 
     if (is_tdp)
     {
+        if (vectordynp.num_alus >0)
+        {
+            power      = power + exeu->power;
+        }
         if (vectordynp.num_muls >0)
         {
             power      = power + mul->power;
@@ -283,10 +273,14 @@ void VectorLane::computeEnergy(bool is_tdp)
             power      = power + fp_u->power;
         }
 
-        power      = power + vector_reg_file->power + exeu->power;
+        power      = power + vector_reg_file->power;
     }
     else
     {
+        if (vectordynp.num_alus >0)
+        {
+            rt_power      = rt_power + exeu->rt_power;
+        }
         if (vectordynp.num_muls >0)
         {
             rt_power      = rt_power + mul->rt_power;
@@ -296,7 +290,7 @@ void VectorLane::computeEnergy(bool is_tdp)
         {
             rt_power      = rt_power + fp_u->rt_power;
         }
-        rt_power      = rt_power + vector_reg_file->rt_power + exeu->rt_power;
+        rt_power      = rt_power + vector_reg_file->rt_power;
     }
 }
 
@@ -438,24 +432,36 @@ void VectorEngine::set_vector_param()
 {
 
     vectordynp.opt_local = XML->sys.core[ithCore].opt_local;
+    vectordynp.vdd         = XML->sys.vector_engine[ithCore].vdd;
+    vectordynp.power_gating_vcc     = XML->sys.vector_engine[ithCore].power_gating_vcc;
     vectordynp.Embedded = XML->sys.Embedded;
+
     vectordynp.vector_ty   = (enum Core_type)XML->sys.vector_engine[ithCore].vector_machine_type;
     vectordynp.vector_issueW    = XML->sys.vector_engine[ithCore].vector_issue_width;
     vectordynp.vector_peak_issueW   = XML->sys.vector_engine[ithCore].vector_peak_issue_width;
     vectordynp.vector_commitW       = XML->sys.vector_engine[ithCore].vector_commit_width;
     vectordynp.vector_peak_commitW  = XML->sys.vector_engine[ithCore].vector_peak_issue_width;
+
+    // Vector Lane Organization
     vectordynp.num_fpus             = XML->sys.vector_engine[ithCore].FPU_per_lane;
     vectordynp.num_muls             = XML->sys.vector_engine[ithCore].MUL_per_lane;
     vectordynp.num_alus             = XML->sys.vector_engine[ithCore].ALU_per_lane;
 
-    vectordynp.vdd         = XML->sys.vector_engine[ithCore].vdd;
-    vectordynp.power_gating_vcc    = XML->sys.vector_engine[ithCore].power_gating_vcc;
+    vectordynp.vector_num_pipelines = XML->sys.vector_engine[ithCore].pipelines_per_vector_engine;
+    
+    vectordynp.archi_vector_registers = XML->sys.vector_engine[ithCore].archi_vector_registers;
+    vectordynp.phys_vector_registers  = XML->sys.vector_engine[ithCore].phys_vector_registers;
 
-    vectordynp.vector_num_pipelines= XML->sys.vector_engine[ithCore].pipelines_per_vector_engine;
     vectordynp.lanes                = XML->sys.vector_engine[ithCore].lanes;
+    vectordynp.mvl                  = XML->sys.vector_engine[ithCore].mvl;
+    vectordynp.vl_per_lane          = vectordynp.mvl / vectordynp.lanes;
+    vectordynp.banks_per_lane       = XML->sys.vector_engine[ithCore].banks_per_lane;
 
-    vectordynp.vector_arch_reg_width  =  int(ceil(log2(XML->sys.vector_engine[ithCore].archi_Regs_VRF_size)));
-    vectordynp.num_VRF_entry    = XML->sys.vector_engine[ithCore].archi_Regs_VRF_size;
+    // Vector Register File Organization
+    vectordynp.vrf_data_width         = XML->sys.vector_engine[ithCore].vrf_data_width;
+    vectordynp.vrf_entries            = (vectordynp.vl_per_lane * vectordynp.phys_vector_registers) / vectordynp.banks_per_lane;
+    vectordynp.vrf_read_ports         = XML->sys.vector_engine[ithCore].vrf_read_ports;
+    vectordynp.vrf_write_ports        = XML->sys.vector_engine[ithCore].vrf_write_ports;
 
     vectordynp.pipeline_duty_cycle = XML->sys.vector_engine[ithCore].pipeline_duty_cycle;
     vectordynp.total_cycles        = XML->sys.vector_engine[ithCore].total_cycles;
@@ -465,7 +471,6 @@ void VectorEngine::set_vector_param()
     vectordynp.ALU_duty_cycle = XML->sys.vector_engine[ithCore].ALU_duty_cycle;
     vectordynp.MUL_duty_cycle = XML->sys.vector_engine[ithCore].MUL_duty_cycle;
     vectordynp.FPU_duty_cycle = XML->sys.vector_engine[ithCore].FPU_duty_cycle;
-
 
     vectordynp.perThreadState     =  8;
     vectordynp.clockRate          =  XML->sys.core[ithCore].clock_rate;

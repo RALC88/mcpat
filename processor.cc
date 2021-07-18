@@ -104,7 +104,6 @@ Processor::Processor(ParseXML *XML_interface)
   else
 	  numL2Dir = procdynp.numL2Dir;
 
-cout << "========================================  Setting the core:" << endl;
   for (i = 0;i < numCore; i++)
   {
 		  cores.push_back(new Core(XML,i, &interface_ip));
@@ -134,7 +133,6 @@ cout << "========================================  Setting the core:" << endl;
 		  }
   }
 
-cout << "========================================  Setting the vector engine:" << endl;
   if (numVectorEngine >0)
   {
     for (i = 0;i < numVectorEngine; i++)
@@ -155,7 +153,6 @@ cout << "========================================  Setting the vector engine:" <
         rt_power = rt_power  + vector_engine.rt_power;
     }
   }
-cout << "========================================  Setting the L2:" << endl;
 
   if (!XML->sys.Private_L2)
   {
@@ -188,7 +185,6 @@ cout << "========================================  Setting the L2:" << endl;
 		  }
 	  }
   }
-cout << "========================================  Setting the L3:" << endl;
   if (numL3 >0)
 	  for (i = 0;i < numL3; i++)
 	  {

@@ -177,18 +177,30 @@ public:
 	double power_gating_vcc;
 
     // Vector Engine
+
     enum Core_type vector_ty;
+
     int num_VRF_entry;
     int lanes;
+    int mvl;
+    int vl_per_lane;
+    int banks_per_lane;
+    
+    int archi_vector_registers;
+    int phys_vector_registers;
+
+    int vrf_data_width;
+    int vrf_entries;
+    int vrf_read_ports;
+    int vrf_write_ports;
+
     int vector_data_width;
     int vector_issueW;
     int vector_peak_issueW;
     int vector_commitW;
     int vector_peak_commitW;
     int vector_num_pipelines; // Per lane
-//    int vector_num_fpus; // FPU per lane
-//    int vector_num_muls;
-    int vector_arch_reg_width;
+
 
     ~CoreDynParam(){};
 };

@@ -298,13 +298,15 @@ typedef struct{
 	double vdd;
 	double power_gating_vcc;
 
+	int phys_vector_registers;
+    int archi_vector_registers;
+
 	int lanes;
 	double mvl;
-	int phy_Regs_VRF_size;
-    int archi_Regs_VRF_size;
+	int banks_per_lane;
 
 	int vrf_data_width;
-	int vrf_entries;
+	//int vrf_entries;
 	int vrf_read_ports;
 	int vrf_write_ports;
 
