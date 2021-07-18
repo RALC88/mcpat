@@ -625,31 +625,14 @@ void ParseXML::parse(char* filepath)
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"lanes")==0) {sys.vector_engine[i].lanes=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"mvl")==0) {sys.vector_engine[i].mvl=atof(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
 
-						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_ports")==0)
-						{
-							strtmp.assign(xNode3.getChildNode("param",k).getAttribute("value"));
-							m=0;
-							for(n=0; n<strtmp.length(); n++)
-							{
-								if (strtmp[n]!=',')
-								{
-									sprintf(chtmp,"%c",strtmp[n]);
-									strcat(chtmp1,chtmp);
-								}
-								else{
-									sys.vector_engine[i].vrf_ports[m]=atoi(chtmp1);
-									m++;
-									chtmp1[0]='\0';
-								}
-							}
-							sys.vector_engine[i].vrf_ports[m]=atoi(chtmp1);
-							m++;
-							chtmp1[0]='\0';
-							continue;
-						}
-
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"phy_Regs_VRF_size")==0) {sys.vector_engine[i].phy_Regs_VRF_size=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"archi_Regs_VRF_size")==0) {sys.vector_engine[i].archi_Regs_VRF_size=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_data_width")==0) {sys.vector_engine[i].vrf_data_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_entries")==0) {sys.vector_engine[i].vrf_entries=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_read_ports")==0) {sys.vector_engine[i].vrf_read_ports=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vrf_write_ports")==0) {sys.vector_engine[i].vrf_write_ports=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
+
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_issue_width")==0) {sys.vector_engine[i].vector_issue_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_peak_issue_width")==0) {sys.vector_engine[i].vector_peak_issue_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("param",k).getAttribute("name"),"vector_commit_width")==0) {sys.vector_engine[i].vector_commit_width=atoi(xNode3.getChildNode("param",k).getAttribute("value"));continue;}
@@ -1740,9 +1723,13 @@ void ParseXML::initialize() //Initialize all
 
 		sys.vector_engine[i].lanes=1;
 		sys.vector_engine[i].mvl=1;
-		//sys.vector_engine[i].vrf_ports[20]=1;
 		sys.vector_engine[i].phy_Regs_VRF_size=1;
 		sys.vector_engine[i].archi_Regs_VRF_size =1;
+
+		sys.vector_engine[i].vrf_data_width=1;
+		sys.vector_engine[i].vrf_entries=1;
+		sys.vector_engine[i].vrf_read_ports=1;
+		sys.vector_engine[i].vrf_write_ports=1;
 
 		sys.vector_engine[i].vector_issue_width =1;
 		sys.vector_engine[i].vector_peak_issue_width =1;

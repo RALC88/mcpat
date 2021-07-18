@@ -46,68 +46,68 @@
 			<param name="opcode_width" value="7"/>
 			<param name="x86" value="0"/>
 			<param name="micro_opcode_width" value="8"/>
-			<param name="machine_type" value="0"/>
+			<param name="machine_type" value="1"/>
 			<!-- inorder/OoO; 1 inorder; 0 OOO-->
 			<param name="number_hardware_threads" value="1"/>
 			<!-- number_instruction_fetch_ports(icache ports) is always 1 in single-thread processor,
 			it only may be more than one in SMT processors. BTB ports always equals to fetch ports since 
 			branch information in consecutive branch instructions in the same fetch group can be read out from BTB once.--> 
-			<param name="fetch_width" value="4"/>
+			<param name="fetch_width" value="2"/>
 			<!-- fetch_width determines the size of cachelines of L1 cache block -->
 			<param name="number_instruction_fetch_ports" value="1"/>
-			<param name="decode_width" value="4"/>
+			<param name="decode_width" value="2"/>
 			<!-- decode_width determines the number of ports of the 
 			renaming table (both RAM and CAM) scheme -->
-			<param name="issue_width" value="4"/>
-			<param name="peak_issue_width" value="6"/>
+			<param name="issue_width" value="2"/>
+			<param name="peak_issue_width" value="2"/>
 			<!-- issue_width determines the number of ports of Issue window and other logic 
 			as in the complexity effective processors paper; issue_width==dispatch_width -->
-			<param name="commit_width" value="4"/>
+			<param name="commit_width" value="2"/>
 			<!-- commit_width determines the number of ports of register files -->
-			<param name="fp_issue_width" value="2"/>
-			<param name="prediction_width" value="1"/> 
+			<param name="fp_issue_width" value="1"/>
+			<param name="prediction_width" value="0"/> 
 			<!-- number of branch instructions can be predicted simultaneously-->
 			<!-- Current version of McPAT does not distinguish int and floating point pipelines 
 			Theses parameters are reserved for future use.--> 
 			<param name="pipelines_per_core" value="1,1"/>
 			<!--integer_pipeline and floating_pipelines, if the floating_pipelines is 0, then the pipeline is shared-->
-			<param name="pipeline_depth" value="7,7"/>
+			<param name="pipeline_depth" value="6,6"/>
 			<!-- pipeline depth of int and fp, if pipeline is shared, the second number is the average cycles of fp ops -->
 			<!-- issue and exe unit-->
-			<param name="ALU_per_core" value="4"/>
+			<param name="ALU_per_core" value="1"/>
 			<!-- contains an adder, a shifter, and a logical unit -->
-			<param name="MUL_per_core" value="0"/>
+			<param name="MUL_per_core" value="1"/>
 			<!-- For MUL and Div -->
 			<param name="FPU_per_core" value="1"/>		
 			<!-- buffer between IF and ID stage -->
-			<param name="instruction_buffer_size" value="32"/>
+			<param name="instruction_buffer_size" value="16"/>
 			<!-- buffer between ID and sche/exe stage -->
 			<param name="decoded_stream_buffer_size" value="16"/>
 			<param name="instruction_window_scheme" value="0"/><!-- 0 PHYREG based, 1 RSBASED-->
 			<!-- McPAT support 2 types of OoO cores, RS based and physical reg based-->
-			<param name="instruction_window_size" value="20"/>
-			<param name="fp_instruction_window_size" value="15"/>
+			<param name="instruction_window_size" value="16"/>
+			<param name="fp_instruction_window_size" value="16"/>
 			<!-- the instruction issue Q as in Alpha 21264; The RS as in Intel P6 -->
-			<param name="ROB_size" value="80"/>
+			<param name="ROB_size" value="64"/>
 			<!-- each in-flight instruction has an entry in ROB -->
 			<!-- registers -->
 			<param name="archi_Regs_IRF_size" value="32"/>		
 			<param name="archi_Regs_FRF_size" value="32"/>
 			<!--  if OoO processor, phy_reg number is needed for renaming logic, 
 			renaming logic is for both integer and floating point insts.  -->
-			<param name="phy_Regs_IRF_size" value="80"/>
-			<param name="phy_Regs_FRF_size" value="72"/>
+			<param name="phy_Regs_IRF_size" value="64"/>
+			<param name="phy_Regs_FRF_size" value="64"/>
 			<!-- rename logic -->
-			<param name="rename_scheme" value="1"/>
+			<param name="rename_scheme" value="0"/>
 			<!-- can be RAM based(0) or CAM based(1) rename scheme 
 			RAM-based scheme will have free list, status table;
 			CAM-based scheme have the valid bit in the data field of the CAM -->
-			<param name="checkpoint_depth" value="8"/>
+			<!--  <param name="checkpoint_depth" value="8"/> -->
 			<!-- RAM and CAM RAT contains checkpoints, checkpoint_depth=# of in_flight speculations;
 			RAM-based RAT should not have more than 4 GCs (e.g., MIPS R10000). 
 			McPAT assumes the exsistance of RRAT when the RAM-RAT having no GCs (e.g., Netburst)
 			CAM-based RAT should have at least 1 GC and can have more than 8 GCs. -->
-			<param name="register_windows_size" value="0"/>
+			<param name="register_windows_size" value="8"/>
 			<!-- how many windows in the windowed register file, sun processors;
 			no register windowing is used when this number is 0 -->
 			<!-- In OoO cores, loads and stores can be issued whether inorder(Pentium Pro) or (OoO)out-of-order(Alpha),
@@ -117,7 +117,7 @@
 			<!-- By default, in-order cores do not have load buffers -->
 			<param name="load_buffer_size" value="32"/>	
 			<!-- number of ports refer to sustain-able concurrent memory accesses --> 
-			<param name="memory_ports" value="2"/>	
+			<param name="memory_ports" value="1"/>	
 			<!-- max_allowed_in_flight_memo_instructions determines the # of ports of load and store buffer
 			as well as the ports of Dcache which is connected to LSU -->	
 			<!-- dual-pumped Dcache can be used to save the extra read/write ports -->
@@ -224,7 +224,7 @@
 			<component id="system.core0.icache" name="icache">
 				<!-- there is no write requests to itlb although writes happen to it after miss, 
 				which is actually a replacement -->
-				<param name="icache_config" value="65536,16,2,1,1,2,16,0"/>
+				<param name="icache_config" value="32768,16,2,1,1,2,16,0"/>
 				<!-- the parameters are capacity,block_width, associativity, bank, throughput w.r.t. core clock, latency w.r.t. core clock,output_width, cache policy,  -->
 				<!-- cache_policy;//0 no write or write-though with non-write allocate;1 write-back with write-allocate -->
 				<param name="buffer_sizes" value="16, 16, 16,0"/>
@@ -241,7 +241,8 @@
 			</component>
 			<component id="system.core0.dcache" name="dcache">
 			        <!-- all the buffer related are optional -->
-				<param name="dcache_config" value="65536,16,2,1,1,3,16,0"/>
+				<param name="dcache_config" value="32768,16,8,1,1,3,16,0"/>
+
 				<param name="buffer_sizes" value="16, 16, 16, 16"/>
 				<!-- cache controller buffer sizes: miss_buffer_size(MSHR),fill_buffer_size,prefetch_buffer_size,wb_buffer_size-->	
 				<stat name="read_accesses" value="800000"/>
@@ -266,7 +267,13 @@
 
 				<param name="lanes" value="8"/>
 				<param name="mvl" value="16"/>
-				<param name="vrf_ports" value="4,2,1"/>
+
+				<!-- config for one slice corresponding to one lane. Then if 8 lanes are set, this configuration will be replicated 8 times -->
+				<param name="vrf_data_width" value="64"/>
+				<param name="vrf_entries" value="128"/>
+				<param name="vrf_read_ports" value="4"/>
+				<param name="vrf_write_ports" value="2"/>
+
 				<!-- number of r, w, and rw search ports -->
 				<param name="phy_Regs_VRF_size" value="64"/>
 				<param name="archi_Regs_VRF_size" value="32"/>
@@ -276,8 +283,8 @@
 				<param name="vector_machine_type" value="0"/> 
 				<!-- inorder/OoO; 1 inorder; 0 OOO-->
 				<param name="FPU_per_lane" value="1"/>
-				<param name="MUL_per_lane" value="1"/>
-				<param name="ALU_per_lane" value="1"/>
+				<param name="MUL_per_lane" value="0"/>
+				<param name="ALU_per_lane" value="0"/>
 				<param name="pipelines_per_vector_engine" value="1"/>
 
 				<!-- although there are multiple access types, 
@@ -342,7 +349,7 @@
 		</component>
 		<component id="system.L20" name="L20">
 			<!-- all the buffer related are optional -->
-				<param name="L2_config" value="1835008,16, 8, 16, 32, 32, 12, 1"/> 
+				<param name="L2_config" value="1048576,16, 8, 16, 32, 32, 12, 1"/> 
 				<!-- the parameters are capacity,block_width, associativity, bank, throughput w.r.t. core clock, latency w.r.t. core clock,output_width, cache policy -->
 				<param name="buffer_sizes" value="16, 16, 16, 16"/>
 				<!-- cache controller buffer sizes: miss_buffer_size(MSHR),fill_buffer_size,prefetch_buffer_size,wb_buffer_size-->	

@@ -459,8 +459,9 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 		{
 			num_fu=coredynp.num_fpus;
 			//area_t = 8.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
-			area_t = 4.47*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 The base number
+			//area_t = 4.47*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 The base number // Original Cristobal
 			//4.47 contains both VFP and NEON processing unit, VFP is about 40% and NEON is about 60%
+      area_t = 1.788*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 // Original FPU includes Neon which is 60%, then we remove neon area
 			if (g_ip->F_sz_nm>90)
 				area_t = 4.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
 			leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
@@ -511,7 +512,9 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 		{
 			num_fu=coredynp.num_fpus;
 			//area_t = 8.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
-			area_t = 8.47*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2
+			//area_t = 8.47*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 // Original Cristobal
+      //area_t = 3.38*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 // Original FPU includes Neon which is 60%, then we remove neon area
+      area_t = 1.788*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0); // This is from Embedded
 			if (g_ip->F_sz_nm>90)
 				area_t = 8.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
 			leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W

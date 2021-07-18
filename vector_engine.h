@@ -60,28 +60,6 @@ class VReg :public Component {
 	~VReg();
 };
 
-class VEXECU :public Component {
-  public:
-
-	ParseXML *XML;
-	int  ithCore;
-	InputParameter interface_ip;
-	double clockRate,executionTime;
-	double scktRatio, chip_PR_overhead, macro_PR_overhead;
-	CoreDynParam  vectordynp;
-	VReg          * vector_reg_file;
-    FunctionalUnit * fp_u;
-    FunctionalUnit * exeu;
-    FunctionalUnit * mul;
-
-	bool exist;
-
-	VEXECU(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_, const CoreDynParam & dyn_p_, bool exist_=true);
-    void computeEnergy(bool is_tdp=true);
-	void displayEnergy(uint32_t indent = 0,int plevel = 100, bool is_tdp=true);
-	~VEXECU();
-};
-
 class VectorLane :public Component {
   public:
 
@@ -90,8 +68,12 @@ class VectorLane :public Component {
     InputParameter interface_ip;
     double clockRate,executionTime;
     double scktRatio, chip_PR_overhead, macro_PR_overhead;
-    VEXECU      * exu;
     CoreDynParam  vectordynp;
+
+    VReg           * vector_reg_file;
+    FunctionalUnit * fp_u;
+    FunctionalUnit * exeu;
+    FunctionalUnit * mul;
 
     bool exist;
 

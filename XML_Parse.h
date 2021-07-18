@@ -300,9 +300,13 @@ typedef struct{
 
 	int lanes;
 	double mvl;
-	int vrf_ports[20];
-	int phy_Regs_VRF_size;  // nuevo
+	int phy_Regs_VRF_size;
     int archi_Regs_VRF_size;
+
+	int vrf_data_width;
+	int vrf_entries;
+	int vrf_read_ports;
+	int vrf_write_ports;
 
 	int vector_issue_width;
 	int vector_peak_issue_width;
