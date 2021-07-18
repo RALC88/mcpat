@@ -208,11 +208,8 @@ void VRegBank::computeEnergy(bool is_tdp)
     if (is_tdp)
     {
         //init stats for Peak
-        vrf_bank->stats_t.readAc.access  = vectordynp.vector_issueW*2*(vectordynp.ALU_duty_cycle*1.1+
-                (vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
-        vrf_bank->stats_t.writeAc.access  = vectordynp.vector_issueW*(vectordynp.ALU_duty_cycle*1.1+
-                (vectordynp.num_muls>0?vectordynp.MUL_duty_cycle:0))*vectordynp.vector_num_pipelines;
-        //Rule of Thumb: about 10% RF related instructions do not need to access ALUs
+        vrf_bank->stats_t.readAc.access  = vectordynp.vrf_read_ports*vectordynp.FPU_duty_cycle;
+        vrf_bank->stats_t.writeAc.access  = vectordynp.vrf_write_ports*vectordynp.FPU_duty_cycle;
         vrf_bank->tdp_stats = vrf_bank->stats_t;
      }
     else
@@ -222,6 +219,7 @@ void VRegBank::computeEnergy(bool is_tdp)
         vrf_bank->stats_t.writeAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_writes;
         vrf_bank->rtp_stats = vrf_bank->stats_t;
     }
+
     vrf_bank->power_t.reset();
     vrf_bank->power_t.readOp.dynamic  +=  (vrf_bank->stats_t.readAc.access*vrf_bank->local_result.power.readOp.dynamic
             +vrf_bank->stats_t.writeAc.access*vrf_bank->local_result.power.writeOp.dynamic);
