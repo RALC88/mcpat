@@ -329,6 +329,9 @@ typedef struct{
 	int MUL_duty_cycle;
 	int FPU_duty_cycle;
 
+	int fpu_accesses;
+	int ialu_accesses;
+	int mul_accesses;
 	//stats
 	double vec_regfile_reads; // nuevo
 	double vec_regfile_writes; // nuevo

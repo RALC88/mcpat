@@ -647,7 +647,7 @@ void ParseXML::parse(char* filepath)
 					itmp=xNode3.nChildNode("stat");
 					for(k=0; k<itmp; k++)
 					{ //get all items of stat in system.vector_engine
-						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"pipeline_duty_cycle")==0) {sys.vector_engine[i].pipeline_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						//if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"pipeline_duty_cycle")==0) {sys.vector_engine[i].pipeline_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"total_cycles")==0) {sys.vector_engine[i].total_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"busy_cycles")==0) {sys.vector_engine[i].busy_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"idle_cycles")==0) {sys.vector_engine[i].idle_cycles=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
@@ -655,13 +655,17 @@ void ParseXML::parse(char* filepath)
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"ALU_duty_cycle")==0) {sys.vector_engine[i].ALU_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"MUL_duty_cycle")==0) {sys.vector_engine[i].MUL_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"FPU_duty_cycle")==0) {sys.vector_engine[i].FPU_duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"fpu_accesses")==0) {sys.vector_engine[i].fpu_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"mul_accesses")==0) {sys.vector_engine[i].mul_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"ialu_accesses")==0) {sys.vector_engine[i].ialu_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"vec_regfile_reads")==0) {sys.vector_engine[i].vec_regfile_reads=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"vec_regfile_writes")==0) {sys.vector_engine[i].vec_regfile_writes=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						
-						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.vector_engine[i].total_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
-						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.vector_engine[i].read_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
-						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.vector_engine[i].write_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						//if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"total_accesses")==0) {sys.vector_engine[i].total_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						//if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"read_accesses")==0) {sys.vector_engine[i].read_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
+						//if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"write_accesses")==0) {sys.vector_engine[i].write_accesses=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 						if (strcmp(xNode3.getChildNode("stat",k).getAttribute("name"),"duty_cycle")==0) {sys.vector_engine[i].duty_cycle=atof(xNode3.getChildNode("stat",k).getAttribute("value"));continue;}
 					}
 					w=w+1;
@@ -1750,6 +1754,10 @@ void ParseXML::initialize() //Initialize all
 		sys.vector_engine[i].ALU_duty_cycle =1;
 		sys.vector_engine[i].MUL_duty_cycle =1;
 		sys.vector_engine[i].FPU_duty_cycle =1;
+
+		sys.vector_engine[i].fpu_accesses =1;
+		sys.vector_engine[i].ialu_accesses =1;
+		sys.vector_engine[i].mul_accesses =1;
 
 		sys.vector_engine[i].vec_regfile_reads =1;
 		sys.vector_engine[i].vec_regfile_writes =1;

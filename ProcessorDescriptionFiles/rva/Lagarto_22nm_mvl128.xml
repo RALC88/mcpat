@@ -31,9 +31,9 @@
 		<param name="virtual_memory_page_size" value="4096"/>
 		<!-- address width determines the tag_width in Cache, LSQ and buffers in cache controller 
 			default value is machine_bits, if not set --> 
-		<stat name="total_cycles" value="100000"/>
+		<stat name="total_cycles" value="151400000"/>
 		<stat name="idle_cycles" value="0"/>
-		<stat name="busy_cycles"  value="100000"/>
+		<stat name="busy_cycles"  value="151400000"/>
 			<!--This page size(B) is complete different from the page size in Main memo section. this page size is the size of 
 			virtual memory from OS/Archi perspective; the page size in Main memo section is the actual physical line in a DRAM bank  -->
 		<!-- *********************** cores ******************* -->
@@ -262,7 +262,7 @@
 		</component>
 		<component id="system.vector_engine0" name="vector_engine0">
 				<!-- all the buffer related are optional -->
-			    <param name="clock_rate" value="3400"/>
+			    <param name="clock_rate" value="1200"/>
 				<param name="device_type" value="0"/>
 
 				<param name="lanes" value="8"/>
@@ -296,12 +296,16 @@
 				<stat name="busy_cycles" value="100000"/>
 				<stat name="idle_cycles" value="0"/>
 
+				<stat name="fpu_accesses" value="1310720000"/>
+				<stat name="ialu_accesses" value="0"/>
+				<stat name="mul_accesses" value="0"/>
+
 				<stat name="ALU_duty_cycle" value="0"/>
 				<stat name="MUL_duty_cycle" value="0"/>
 				<stat name="FPU_duty_cycle" value="1"/>
 
-				<stat name="vec_regfile_reads" value="100000"/>
-				<stat name="vec_regfile_writes" value="50000"/>
+				<stat name="vec_regfile_reads" value="1422131200"/>
+				<stat name="vec_regfile_writes" value="658636800"/>
 
 				<stat name="total_accesses" value="400000"/>
 				<stat name="read_accesses" value="200000"/>
@@ -315,7 +319,7 @@
 				<!-- the parameters are capacity,block_width, associativity,bank, throughput w.r.t. core clock, latency w.r.t. core clock,-->
 			    <param name="buffer_sizes" value="8, 8, 8, 8"/>	
 				<!-- all the buffer related are optional -->
-			    <param name="clockrate" value="3400"/>
+			    <param name="clockrate" value="1200"/>
 				<param name="ports" value="1,1,1"/>
 				<!-- number of r, w, and rw search ports -->
 				<param name="device_type" value="0"/>
@@ -358,8 +362,8 @@
 				<param name="ports" value="1,1,1"/>
 				<!-- number of r, w, and rw ports -->
 				<param name="device_type" value="0"/>
-				<stat name="read_accesses" value="200000"/>
-				<stat name="write_accesses" value="27276"/>
+				<stat name="read_accesses" value="2457600"/>
+				<stat name="write_accesses" value="409600"/>
 				<stat name="read_misses" value="1632"/>
 				<stat name="write_misses" value="183"/>
 				<stat name="conflicts" value="0"/>	

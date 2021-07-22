@@ -41,7 +41,10 @@ const double cdb_overhead = 1.1;
 enum FU_type {
     FPU,
     ALU,
-    MUL
+    MUL,
+    VFPU,
+    VALU,
+    VMUL
 };
 
 enum Renaming_type {
@@ -185,7 +188,9 @@ public:
     int mvl;
     int vl_per_lane;
     int banks_per_lane;
-    
+    int reads_per_bank;
+    int writes_per_bank;
+
     int archi_vector_registers;
     int phys_vector_registers;
 
@@ -200,6 +205,10 @@ public:
     int vector_commitW;
     int vector_peak_commitW;
     int vector_num_pipelines; // Per lane
+
+    int fpu_accesses_per_lane; // Per lane
+    int ialu_accesses_per_lane; // Per lane
+    int mul_accesses_per_lane; // Per lane
 
 
     ~CoreDynParam(){};

@@ -455,7 +455,7 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 	result2 = init_interface(&interface_ip);
 	if (XML->sys.Embedded)
 	{
-		if (fu_type == FPU)
+		if ((fu_type == FPU) || (fu_type == VFPU))
 		{
 			num_fu=coredynp.num_fpus;
 			//area_t = 8.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
@@ -474,7 +474,7 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 			//FPU power from Sandia's processor sizing tech report
 			FU_height=(18667*num_fu)*interface_ip.F_sz_um;//FPU from Sun's data
 		}
-		else if (fu_type == ALU)
+		else if ((fu_type == ALU) || (fu_type == VALU))
 		{
 			num_fu=coredynp.num_alus;
 			area_t = 280*260*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
@@ -487,7 +487,7 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 			FU_height=(6222*num_fu)*interface_ip.F_sz_um;//integer ALU
 
 		}
-		else if (fu_type == MUL)
+		else if ((fu_type == MUL) || (fu_type == VMUL))
 		{
 			num_fu=coredynp.num_muls;
 			area_t = 280*260*3*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
@@ -508,7 +508,7 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 	}
 	else
 	{
-		if (fu_type == FPU)
+		if ((fu_type == FPU) || (fu_type == VFPU))
 		{
 			num_fu=coredynp.num_fpus;
 			//area_t = 8.47*1e6*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2
@@ -520,30 +520,30 @@ FunctionalUnit::FunctionalUnit(ParseXML *XML_interface, int ithCore_, InputParam
 			leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
 			gate_leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Ig_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
 			//energy = 0.3529/10*1e-9;//this is the energy(nJ) for a FP instruction in FPU usually it can have up to 20 cycles.
-			base_energy = coredynp.core_ty==Inorder? 0: 89e-3*3; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
+			base_energy = 0;//coredynp.core_ty==Inorder? 0: 89e-3*3; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
 			base_energy *=(g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);
 			per_access_energy = 1.15*3/1e9/4/1.3/1.3*g_tp.peri_global.Vdd*g_tp.peri_global.Vdd*(g_ip->F_sz_nm/90.0);//g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);//0.00649*1e-9; //This is per op energy(nJ)
 			FU_height=(38667*num_fu)*interface_ip.F_sz_um;//FPU from Sun's data
 		}
-		else if (fu_type == ALU)
+		else if ((fu_type == ALU) || (fu_type == VALU))
 		{
 			num_fu=coredynp.num_alus;
 			area_t = 280*260*2*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
 			leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
 			gate_leakage = area_t*(g_tp.scaling_factor.core_tx_density)*cmos_Ig_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;
-			base_energy = coredynp.core_ty==Inorder? 0:89e-3; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
+			base_energy = 0;//coredynp.core_ty==Inorder? 0:89e-3; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
 			base_energy *=(g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);
 			per_access_energy = 1.15/1e9/4/1.3/1.3*g_tp.peri_global.Vdd*g_tp.peri_global.Vdd*(g_ip->F_sz_nm/90.0);//(g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);//0.00649*1e-9; //This is per cycle energy(nJ)
 			FU_height=(6222*num_fu)*interface_ip.F_sz_um;//integer ALU
 
 		}
-		else if (fu_type == MUL)
+		else if ((fu_type == MUL) || (fu_type == VMUL))
 		{
 			num_fu=coredynp.num_muls;
 			area_t = 280*260*2*3*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
 			leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
 			gate_leakage = area_t*(g_tp.scaling_factor.core_tx_density)*cmos_Ig_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;
-			base_energy = coredynp.core_ty==Inorder? 0:89e-3*2; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
+			base_energy = 0;//coredynp.core_ty==Inorder? 0:89e-3*2; //W The base energy of ALU average numbers from Intel 4G and 773Mhz (Wattch)
 			base_energy *=(g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);
 			per_access_energy = 1.15*2/1e9/4/1.3/1.3*g_tp.peri_global.Vdd*g_tp.peri_global.Vdd*(g_ip->F_sz_nm/90.0);//(g_tp.peri_global.Vdd*g_tp.peri_global.Vdd/1.2/1.2);//0.00649*1e-9; //This is per cycle energy(nJ), coefficient based on Wattch
 			FU_height=(9334*num_fu )*interface_ip.F_sz_um;//divider/mul from Sun's data
@@ -582,6 +582,9 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 			stats_t.readAc.access = num_fu;
 			tdp_stats = stats_t;
 			FU_duty_cycle = coredynp.FPU_duty_cycle;
+
+        cout << "  FPU stats_t.readAc.access:" << stats_t.readAc.access << endl;
+        cout << "  FPU FU_duty_cycle:" << FU_duty_cycle << endl;
 		}
 		else if (fu_type == ALU)
 		{
@@ -595,13 +598,41 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 			tdp_stats = stats_t;
 			FU_duty_cycle = coredynp.MUL_duty_cycle;
 		}
+    else if (fu_type == VFPU)
+    {
+      stats_t.readAc.access = num_fu;
+      tdp_stats = stats_t;
+      FU_duty_cycle = coredynp.FPU_duty_cycle;
+
+        cout << "  VFPU stats_t.readAc.access:" << stats_t.readAc.access << endl;
+        cout << "  VFPU FU_duty_cycle:" << FU_duty_cycle << endl;
+    }
+    else if (fu_type == VALU)
+    {
+      stats_t.readAc.access = 1*num_fu;
+      tdp_stats = stats_t;
+      FU_duty_cycle = coredynp.ALU_duty_cycle;
+    }
+    else if (fu_type == VMUL)
+    {
+      stats_t.readAc.access = num_fu;
+      tdp_stats = stats_t;
+      FU_duty_cycle = coredynp.MUL_duty_cycle;
+    }
 
 	    //power.readOp.dynamic = base_energy/clockRate + energy*stats_t.readAc.access;
-	    power.readOp.dynamic = per_access_energy*stats_t.readAc.access + base_energy/clockRate;
+	  power.readOp.dynamic = per_access_energy*stats_t.readAc.access + base_energy/clockRate;
 		double sckRation = g_tp.sckt_co_eff;
 		power.readOp.dynamic *= sckRation*FU_duty_cycle;
 		power.writeOp.dynamic *= sckRation;
 		power.searchOp.dynamic *= sckRation;
+
+    cout << "  sckRation:" << sckRation << endl;
+    cout << "  per_access_energy:" << per_access_energy << endl;
+    cout << "  stats_t.readAc.access:" << stats_t.readAc.access << endl;
+    cout << "  base_energy:" << base_energy << endl;
+    cout << "  clockRate:" << clockRate << endl << endl;
+
 
 	    power.readOp.leakage = leakage;
 	    power.readOp.gate_leakage = gate_leakage;
@@ -632,6 +663,21 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 			stats_t.readAc.access = XML->sys.core[ithCore].mul_accesses;
 			rtp_stats = stats_t;
 		}
+    else if (fu_type == VFPU)
+    {
+      stats_t.readAc.access = coredynp.fpu_accesses_per_lane;
+      rtp_stats = stats_t;
+    }
+    else if (fu_type == VALU)
+    {
+      stats_t.readAc.access = coredynp.ialu_accesses_per_lane;
+      rtp_stats = stats_t;
+    }
+    else if (fu_type == VMUL)
+    {
+      stats_t.readAc.access = coredynp.mul_accesses_per_lane;
+      rtp_stats = stats_t;
+    }
 
 	    //rt_power.readOp.dynamic = base_energy*executionTime + energy*stats_t.readAc.access;
 	    rt_power.readOp.dynamic = per_access_energy*stats_t.readAc.access + base_energy*executionTime;
@@ -641,7 +687,6 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 		rt_power.searchOp.dynamic *= sckRation;
 
 	}
-
 
 }
 
@@ -655,7 +700,7 @@ void FunctionalUnit::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 //	cout << indent_str_next << "Results Broadcast Bus Area = " << bypass->area.get_area() *1e-6 << " mm^2" << endl;
 	if (is_tdp)
 	{
-		if (fu_type == FPU)
+		if ((fu_type == FPU) || (fu_type == VFPU))
 		{
 			cout << indent_str << "Floating Point Units (FPUs) (Count: "<< coredynp.num_fpus <<" ):" << endl;
 			cout << indent_str_next << "Area = " << area.get_area()*1e-6  << " mm^2" << endl;
@@ -669,7 +714,7 @@ void FunctionalUnit::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 			cout << indent_str_next << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
 			cout <<endl;
 		}
-		else if (fu_type == ALU)
+		else if ((fu_type == ALU) || (fu_type == VALU))
 		{
 			cout << indent_str << "Integer ALUs (Count: "<< coredynp.num_alus <<" ):" << endl;
 			cout << indent_str_next << "Area = " << area.get_area()*1e-6  << " mm^2" << endl;
@@ -683,7 +728,7 @@ void FunctionalUnit::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
 			cout << indent_str_next << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
 			cout <<endl;
 		}
-		else if (fu_type == MUL)
+		else if ((fu_type == MUL) || (fu_type == VMUL))
 		{
 			cout << indent_str << "Complex ALUs (Mul/Div) (Count: "<< coredynp.num_muls <<" ):" << endl;
 			cout << indent_str_next << "Area = " << area.get_area()*1e-6  << " mm^2" << endl;
@@ -717,7 +762,7 @@ void FunctionalUnit::leakage_feedback(double temperature)
   double area_t, leakage, gate_leakage;
   double pmos_to_nmos_sizing_r = pmos_to_nmos_sz_ratio();
 
-  if (fu_type == FPU)
+  if ((fu_type == FPU) || (fu_type == VFPU))
   {
 	area_t = 4.47*1e6*(g_ip->F_sz_nm*g_ip->F_sz_nm/90.0/90.0);//this is um^2 The base number
 	if (g_ip->F_sz_nm>90)
@@ -725,13 +770,13 @@ void FunctionalUnit::leakage_feedback(double temperature)
 	leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
 	gate_leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Ig_leakage(5*g_tp.min_w_nmos_, 5*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
   }
-  else if (fu_type == ALU)
+  else if ((fu_type == ALU) || (fu_type == VALU))
   {
     area_t = 280*260*2*num_fu*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
     leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W
     gate_leakage = area_t*(g_tp.scaling_factor.core_tx_density)*cmos_Ig_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;
   }
-  else if (fu_type == MUL)
+  else if ((fu_type == MUL) || (fu_type == VMUL))
   {
     area_t = 280*260*2*3*num_fu*g_tp.scaling_factor.logic_scaling_co_eff;//this is um^2 ALU + MUl
     leakage = area_t *(g_tp.scaling_factor.core_tx_density)*cmos_Isub_leakage(20*g_tp.min_w_nmos_, 20*g_tp.min_w_nmos_*pmos_to_nmos_sizing_r, 1, inv)*g_tp.peri_global.Vdd/2;//unit W

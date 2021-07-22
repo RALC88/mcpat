@@ -140,18 +140,18 @@ VectorLane::VectorLane(ParseXML* XML_interface, int ithCore_, InputParameter* in
 
       if (vectordynp.num_alus >0)
       {
-          exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, ALU);
+          exeu  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, VALU);
           area.set_area(area.get_area()+ exeu->area.get_area());
           fu_height = exeu->FU_height;
       }
       if (vectordynp.num_fpus >0)
       {
-          fp_u  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, FPU);
+          fp_u  = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, VFPU);
           area.set_area(area.get_area()+ fp_u->area.get_area());
       }
       if (vectordynp.num_muls >0)
       {
-          mul   = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, MUL);
+          mul   = new FunctionalUnit(XML, ithCore,&interface_ip, vectordynp, VMUL);
           area.set_area(area.get_area()+ mul->area.get_area());
           fu_height +=  mul->FU_height;
       }
@@ -215,8 +215,8 @@ void VRegBank::computeEnergy(bool is_tdp)
     else
     {
         //init stats for Runtime Dynamic (RTP)
-        vrf_bank->stats_t.readAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_reads;//TODO: no diff on archi and phy
-        vrf_bank->stats_t.writeAc.access  = XML->sys.vector_engine[ithCore].vec_regfile_writes;
+        vrf_bank->stats_t.readAc.access  = vectordynp.reads_per_bank;
+        vrf_bank->stats_t.writeAc.access  = vectordynp.writes_per_bank;
         vrf_bank->rtp_stats = vrf_bank->stats_t;
     }
 
@@ -258,14 +258,12 @@ void VRegFile::computeEnergy(bool is_tdp)
           //set_pppm(pppm_t,vector_reg_banks[i]->clockRate, 1, 1, 1);
           vector_reg_file_slice.power = vector_reg_file_slice.power + vector_reg_banks[i]->power/**pppm_t*/;
           power = power  + vector_reg_banks[i]->power/**pppm_t*/;
-
-          //set_pppm(pppm_t,1/vector_reg_banks[i]->executionTime, 1, 1, 1);
-          vector_reg_file_slice.rt_power = vector_reg_file_slice.rt_power + vector_reg_banks[i]->rt_power/**pppm_t*/;
-          rt_power = rt_power  + vector_reg_banks[i]->rt_power/**pppm_t*/;
         }
         else
         {
-
+          //set_pppm(pppm_t,1/vector_reg_banks[i]->executionTime, 1, 1, 1);
+          vector_reg_file_slice.rt_power = vector_reg_file_slice.rt_power + vector_reg_banks[i]->rt_power/**pppm_t*/;
+          rt_power = rt_power  + vector_reg_banks[i]->rt_power/**pppm_t*/;
         }
     }
 }
@@ -424,14 +422,12 @@ void VectorEngine::computeEnergy(bool is_tdp)
           set_pppm(pppm_t,lanes[i]->clockRate, 1, 1, 1);
           lane.power = lane.power + lanes[i]->power*pppm_t;
           power = power  + lanes[i]->power*pppm_t;
-
-          set_pppm(pppm_t,1/lanes[i]->executionTime, 1, 1, 1);
-          lane.rt_power = lane.rt_power + lanes[i]->rt_power*pppm_t;
-          rt_power = rt_power  + lanes[i]->rt_power*pppm_t;
         }
         else
         {
-
+          set_pppm(pppm_t,1/lanes[i]->executionTime, 1, 1, 1);
+          lane.rt_power = lane.rt_power + lanes[i]->rt_power*pppm_t;
+          rt_power = rt_power  + lanes[i]->rt_power*pppm_t;
         }
     }
 
@@ -524,6 +520,9 @@ void VectorEngine::set_vector_param()
     vectordynp.vl_per_lane          = vectordynp.mvl / vectordynp.lanes;
     vectordynp.banks_per_lane       = XML->sys.vector_engine[ithCore].banks_per_lane;
 
+    vectordynp.reads_per_bank       = ((XML->sys.vector_engine[ithCore].vec_regfile_reads) / (vectordynp.lanes)) / vectordynp.banks_per_lane;
+    vectordynp.writes_per_bank      = ((XML->sys.vector_engine[ithCore].vec_regfile_writes) / (vectordynp.lanes)) / vectordynp.banks_per_lane;
+
     // Vector Register File Organization
     vectordynp.vrf_data_width         = XML->sys.vector_engine[ithCore].vrf_data_width;
     vectordynp.vrf_entries            = (vectordynp.vl_per_lane * vectordynp.phys_vector_registers) / vectordynp.banks_per_lane;
@@ -535,9 +534,13 @@ void VectorEngine::set_vector_param()
     vectordynp.busy_cycles         = XML->sys.vector_engine[ithCore].busy_cycles;
     vectordynp.idle_cycles         = XML->sys.vector_engine[ithCore].idle_cycles;
 
-    vectordynp.ALU_duty_cycle = XML->sys.vector_engine[ithCore].ALU_duty_cycle;
-    vectordynp.MUL_duty_cycle = XML->sys.vector_engine[ithCore].MUL_duty_cycle;
-    vectordynp.FPU_duty_cycle = XML->sys.vector_engine[ithCore].FPU_duty_cycle;
+    vectordynp.ALU_duty_cycle     = XML->sys.vector_engine[ithCore].ALU_duty_cycle;
+    vectordynp.MUL_duty_cycle     = XML->sys.vector_engine[ithCore].MUL_duty_cycle;
+    vectordynp.FPU_duty_cycle     = XML->sys.vector_engine[ithCore].FPU_duty_cycle;
+
+    vectordynp.fpu_accesses_per_lane  = XML->sys.vector_engine[ithCore].fpu_accesses / vectordynp.lanes;
+    vectordynp.ialu_accesses_per_lane = XML->sys.vector_engine[ithCore].ialu_accesses / vectordynp.lanes;
+    vectordynp.mul_accesses_per_lane  = XML->sys.vector_engine[ithCore].mul_accesses / vectordynp.lanes;
 
     vectordynp.perThreadState     =  8;
     vectordynp.clockRate          =  XML->sys.core[ithCore].clock_rate;
