@@ -292,10 +292,16 @@
 				Performance simulator needs to cast them into reads or writes
 				e.g. the invalidates can be considered as writes -->
 				<stat name="pipeline_duty_cycle" value="1"/>
+				<!-- 
 				<stat name="total_cycles" value="100000"/>
 				<stat name="busy_cycles" value="100000"/>
 				<stat name="idle_cycles" value="0"/>
+				 -->
 
+				<stat name="fpu_accesses" value="1310720000"/>
+				<stat name="ialu_accesses" value="0"/>
+				<stat name="mul_accesses" value="0"/>
+				
 				<stat name="ALU_duty_cycle" value="0"/>
 				<stat name="MUL_duty_cycle" value="0"/>
 				<stat name="FPU_duty_cycle" value="1"/>

@@ -582,9 +582,6 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 			stats_t.readAc.access = num_fu;
 			tdp_stats = stats_t;
 			FU_duty_cycle = coredynp.FPU_duty_cycle;
-
-        cout << "  FPU stats_t.readAc.access:" << stats_t.readAc.access << endl;
-        cout << "  FPU FU_duty_cycle:" << FU_duty_cycle << endl;
 		}
 		else if (fu_type == ALU)
 		{
@@ -603,9 +600,6 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
       stats_t.readAc.access = num_fu;
       tdp_stats = stats_t;
       FU_duty_cycle = coredynp.FPU_duty_cycle;
-
-        cout << "  VFPU stats_t.readAc.access:" << stats_t.readAc.access << endl;
-        cout << "  VFPU FU_duty_cycle:" << FU_duty_cycle << endl;
     }
     else if (fu_type == VALU)
     {
@@ -627,13 +621,6 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
 		power.writeOp.dynamic *= sckRation;
 		power.searchOp.dynamic *= sckRation;
 
-    cout << "  sckRation:" << sckRation << endl;
-    cout << "  per_access_energy:" << per_access_energy << endl;
-    cout << "  stats_t.readAc.access:" << stats_t.readAc.access << endl;
-    cout << "  base_energy:" << base_energy << endl;
-    cout << "  clockRate:" << clockRate << endl << endl;
-
-
 	    power.readOp.leakage = leakage;
 	    power.readOp.gate_leakage = gate_leakage;
 	    double long_channel_device_reduction = longer_channel_device_reduction(Core_device, coredynp.core_ty);
@@ -642,8 +629,6 @@ void FunctionalUnit::computeEnergy(bool is_tdp)
     	double pg_reduction = power_gating_leakage_reduction(false);
     	power.readOp.power_gated_leakage	= power.readOp.leakage*pg_reduction;
   	    power.readOp.power_gated_with_long_channel_leakage = power.readOp.power_gated_leakage * long_channel_device_reduction;
-
-
 
 	}
 	else
