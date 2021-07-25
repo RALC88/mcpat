@@ -185,14 +185,12 @@ VectorEngine::VectorEngine(ParseXML* XML_interface, int ithCore_, InputParameter
 
           lane.area.set_area(lane.area.get_area() + lanes[i]->area.get_area());
           area.set_area(area.get_area() + lanes[i]->area.get_area());
+    }
 
-          //set_pppm(pppm_t,lanes[i]->clockRate, 1, 1, 1);
-          //lane.power = lane.power + lanes[i]->power*pppm_t;
-          //power = power  + lanes[i]->power*pppm_t;
-
-          //set_pppm(pppm_t,1/lanes[i]->executionTime, 1, 1, 1);
-          //lane.rt_power = lane.rt_power + lanes[i]->rt_power*pppm_t;
-          //rt_power = rt_power  + lanes[i]->rt_power*pppm_t;
+    for (int i = 0;i < numLanes; i++)
+    {
+          fpu.area.set_area(fpu.area.get_area() + lanes[i]->fp_u->area.get_area());
+          vrf.area.set_area(vrf.area.get_area() + lanes[i]->vector_reg_file->area.get_area());
     }
 }
 
@@ -220,7 +218,7 @@ void VRegBank::computeEnergy(bool is_tdp)
         vrf_bank->rtp_stats = vrf_bank->stats_t;
     }
 
-    vrf_bank->power_t.reset();
+    //vrf_bank->power_t.reset();
     vrf_bank->power_t.readOp.dynamic  +=  (vrf_bank->stats_t.readAc.access*vrf_bank->local_result.power.readOp.dynamic
             +vrf_bank->stats_t.writeAc.access*vrf_bank->local_result.power.writeOp.dynamic);
 
@@ -369,7 +367,7 @@ void VectorLane::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
         cout << indent_str_next << "Peak Dynamic = " << power.readOp.dynamic*clockRate << " W" << endl;
         cout << indent_str_next << "Subthreshold Leakage = "
             << (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
-        if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
+        if (power_gating) cout << indent_str_next << "Subthreshold Leakage with power gating = "
                 << (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
         cout << indent_str_next << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
         cout << indent_str_next << "Runtime Dynamic = " << rt_power.readOp.dynamic/executionTime << " W" << endl;
@@ -431,6 +429,22 @@ void VectorEngine::computeEnergy(bool is_tdp)
         }
     }
 
+    for (int i = 0;i < numLanes; i++)
+    {
+        if (is_tdp)
+        {
+          set_pppm(pppm_t,lanes[i]->clockRate, 1, 1, 1);
+          vrf.power = vrf.power +  lanes[i]->vector_reg_file->power*pppm_t;
+          fpu.power = fpu.power +  lanes[i]->fp_u->power*pppm_t;
+        }
+        else
+        {
+          set_pppm(pppm_t,lanes[i]->clockRate, 1, 1, 1);
+          vrf.rt_power = vrf.rt_power +  lanes[i]->vector_reg_file->rt_power;
+          fpu.rt_power = fpu.rt_power +  lanes[i]->fp_u->rt_power;
+        }
+    }
+
 }
 
 void VectorEngine::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
@@ -445,15 +459,37 @@ void VectorEngine::displayEnergy(uint32_t indent,int plevel,bool is_tdp)
     {
         cout << "Vector Engine" << endl;
         cout << indent_str << "Area = " << area.get_area()*1e-6<< " mm^2" << endl;
-        cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic/**clockRate*/ << " W" << endl;
+        cout << indent_str << "Peak Dynamic = " << power.readOp.dynamic << " W" << endl;
         cout << indent_str << "Subthreshold Leakage = "
             << (long_channel? power.readOp.longer_channel_leakage:power.readOp.leakage) <<" W" << endl;
         if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
                 << (long_channel? power.readOp.power_gated_with_long_channel_leakage : power.readOp.power_gated_leakage)  << " W" << endl;
         cout << indent_str << "Gate Leakage = " << power.readOp.gate_leakage << " W" << endl;
-        cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic/*/executionTime*/ << " W" << endl;
+        cout << indent_str << "Runtime Dynamic = " << rt_power.readOp.dynamic << " W" << endl;
         cout<<endl;
-        
+
+        cout << "  Full Vector Regiter File" << endl;
+        cout << indent_str << "Area = " << vrf.area.get_area()*1e-6<< " mm^2" << endl;
+        cout << indent_str << "Peak Dynamic = " << vrf.power.readOp.dynamic/**clockRate*/ << " W" << endl;
+        cout << indent_str << "Subthreshold Leakage = "
+            << (long_channel? vrf.power.readOp.longer_channel_leakage:vrf.power.readOp.leakage) <<" W" << endl;
+        if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
+                << (long_channel? vrf.power.readOp.power_gated_with_long_channel_leakage : vrf.power.readOp.power_gated_leakage)  << " W" << endl;
+        cout << indent_str << "Gate Leakage = " << vrf.power.readOp.gate_leakage << " W" << endl;
+        cout << indent_str << "Runtime Dynamic = " << vrf.rt_power.readOp.dynamic/executionTime << " W" << endl;
+        cout<<endl;
+
+        cout << "  Floating Point Units" << endl;
+        cout << indent_str << "Area = " << fpu.area.get_area()*1e-6<< " mm^2" << endl;
+        cout << indent_str << "Peak Dynamic = " << fpu.power.readOp.dynamic/**clockRate*/ << " W" << endl;
+        cout << indent_str << "Subthreshold Leakage = "
+            << (long_channel? fpu.power.readOp.longer_channel_leakage:fpu.power.readOp.leakage) <<" W" << endl;
+        if (power_gating) cout << indent_str << "Subthreshold Leakage with power gating = "
+                << (long_channel? fpu.power.readOp.power_gated_with_long_channel_leakage : fpu.power.readOp.power_gated_leakage)  << " W" << endl;
+        cout << indent_str << "Gate Leakage = " << fpu.power.readOp.gate_leakage << " W" << endl;
+        cout << indent_str << "Runtime Dynamic = " << fpu.rt_power.readOp.dynamic/executionTime << " W" << endl;
+        cout<<endl;
+
     }
     else
     {

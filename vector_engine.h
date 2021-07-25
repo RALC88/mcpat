@@ -120,7 +120,7 @@ class VectorEngine :public Component {
     CoreDynParam  vectordynp;
     //full_decoder 	inst_decoder;
     //clock_network	clockNetwork;
-    Component lane;
+    Component lane,vrf,fpu;
     int numLanes;
 	VectorEngine(ParseXML *XML_interface, int ithCore_, InputParameter* interface_ip_);
 	void set_vector_param();
